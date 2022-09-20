@@ -35,14 +35,9 @@ void Renderer::Render(Scene* pScene) const
 	for (int px{}; px < m_Width; ++px)
 	{
 		for (int py{}; py < m_Height; ++py)
-		{
-			/*float gradient = px / static_cast<float>(m_Width);
-			gradient += py / static_cast<float>(m_Width);
-			gradient /= 2.0f;
-
-			ColorRGB finalColor{ gradient, gradient, gradient };*/
-
-			float cx = ((2 * (px + 0.5f)) / width - 1) * aspectRatio;
+		{	
+			// From Raster to Camera
+			float cx = ((2 * (px + 0.5f)) / width - 1) * aspectRatio; //This should only be done everytime px changes, so this position is suboptimal
 			float cy = 1 - (2 * (py + 0.5f)) / height;
 			
 			Vector3 rayDirection = cx * camera.right + cy * camera.up + camera.forward;
