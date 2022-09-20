@@ -36,7 +36,7 @@ void Renderer::Render(Scene* pScene) const
 	{
 		for (int py{}; py < m_Height; ++py)
 		{	
-			// From Raster to Camera
+			//TODO 3: From Raster to Camera
 			float cx = ((2 * (px + 0.5f)) / width - 1) * aspectRatio; //This should only be done everytime px changes, so this position is suboptimal
 			float cy = 1 - (2 * (py + 0.5f)) / height;
 			
@@ -45,6 +45,33 @@ void Renderer::Render(Scene* pScene) const
 
 			Ray hitRay = Ray{ {0,0,0}, rayDirection };
 			ColorRGB finalColor{ rayDirection.x, rayDirection.y, rayDirection.z };
+
+
+			////TODO 4: lets add a circle
+			//HitRecord closestHit{};
+			//
+			//Sphere testSphere{ {0.f, 0.f,100.f}, 50.f, 0 };
+
+			//GeometryUtils::HitTest_Sphere(testSphere, hitRay, closestHit);
+
+			//if (closestHit.didHit)
+			//{
+			//	//finalColor = materials[closestHit.materialIndex]->Shade();
+			//	
+			//	//TODO 5: lets see if I did this right
+			//	const float scaled_t = (closestHit.t - 50.f) / 40.f;
+			//	finalColor = { scaled_t, scaled_t, scaled_t };
+			//}
+
+			//TODO 6: rendering the scene
+			HitRecord closestHit{};
+			pScene->GetClosestHit(hitRay, closestHit);
+
+			if (closestHit.didHit)
+			{
+				finalColor = materials[closestHit.materialIndex]->Shade();
+			}
+
 
 			//Update Color in Buffer
 			finalColor.MaxToOne();

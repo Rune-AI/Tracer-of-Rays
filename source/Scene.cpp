@@ -29,7 +29,29 @@ namespace dae {
 	void dae::Scene::GetClosestHit(const Ray& ray, HitRecord& closestHit) const
 	{
 		//todo W1
-		assert(false && "No Implemented Yet!");
+		//assert(false && "No Implemented Yet!");
+		
+		
+		closestHit.t = INFINITY;
+		for (Sphere sphere : GetSphereGeometries())
+		{
+			Vector3 TC{ sphere.origin - ray.origin };
+			float dp{ TC.Dot(TC, ray.direction) };
+			float od = sqrtf(powf(TC.Magnitude(), 2) - powf(dp, 2));
+			float tca = sqrtf(powf(sphere.radius, 2) - powf(od, 2));
+			float t0 = dp - tca;
+
+			//if hitting sphere and closet than last closestHit
+			if (od <= sphere.radius && t0 < closestHit.t)
+			{
+				closestHit.didHit = true;
+				closestHit.t = dp - tca;
+				closestHit.materialIndex = sphere.materialIndex;
+				closestHit.origin = ray.direction.Normalized() * closestHit.t;
+				closestHit.normal = (closestHit.origin - sphere.origin).Normalized();
+			}
+		}
+		
 	}
 
 	bool Scene::DoesHit(const Ray& ray) const

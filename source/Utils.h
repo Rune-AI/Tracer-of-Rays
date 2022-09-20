@@ -13,8 +13,24 @@ namespace dae
 		inline bool HitTest_Sphere(const Sphere& sphere, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
 			//todo W1
-			assert(false && "No Implemented Yet!");
-			return false;
+			/*assert(false && "No Implemented Yet!");
+			return false;*/
+
+			Vector3 TC{ sphere.origin - ray.origin };
+			float dp{ TC.Dot(TC, ray.direction) };
+			float od = sqrtf(powf(TC.Magnitude(), 2) - powf(dp, 2));
+			float tca = sqrtf(powf(sphere.radius, 2) - powf(od, 2));
+			float t0 = dp - tca;
+
+			hitRecord.didHit = od <= sphere.radius;
+			if (hitRecord.didHit)
+			{
+				hitRecord.t = dp - tca;
+				hitRecord.materialIndex = sphere.materialIndex;
+				hitRecord.origin = ray.direction.Normalized() * hitRecord.t;
+				hitRecord.normal = (hitRecord.origin - sphere.origin);
+			}
+			return hitRecord.didHit;
 		}
 
 		inline bool HitTest_Sphere(const Sphere& sphere, const Ray& ray)
