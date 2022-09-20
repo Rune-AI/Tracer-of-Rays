@@ -37,21 +37,39 @@ namespace dae {
 		{
 			Vector3 TC{ sphere.origin - ray.origin };
 			float dp{ TC.Dot(TC, ray.direction) };
-			float od = sqrtf(powf(TC.Magnitude(), 2) - powf(dp, 2));
-			float tca = sqrtf(powf(sphere.radius, 2) - powf(od, 2));
+			float od = sqrtf(Square(TC.Magnitude()) - Square(dp));
+			float tca = sqrtf(Square(sphere.radius) - Square(od));
 			float t0 = dp - tca;
 
-			//if hitting sphere and closet than last closestHit
+			//if hitting sphere and closer than last closestHit
 			if (od <= sphere.radius && t0 < closestHit.t)
 			{
 				closestHit.didHit = true;
-				closestHit.t = dp - tca;
+				closestHit.t = t0;
 				closestHit.materialIndex = sphere.materialIndex;
 				closestHit.origin = ray.direction.Normalized() * closestHit.t;
 				closestHit.normal = (closestHit.origin - sphere.origin).Normalized();
 			}
 		}
-		
+
+		for (Plane plane : GetPlaneGeometries())
+		{
+			float t = Vector3::Dot(plane.origin - ray.origin, plane.normal) / Vector3::Dot(ray.direction, plane.normal);
+
+			if (t >= ray.min && t <= ray.max)
+			{
+				Vector3 p = ray.origin + (Vector3::Dot(plane.origin - ray.origin, plane.normal)) / Vector3::Dot(ray.direction, plane.normal) * ray.direction;
+
+				if (t < closestHit.t)
+				{
+					closestHit.didHit = true;
+					closestHit.t = t;
+					closestHit.materialIndex = plane.materialIndex;
+					closestHit.origin = p;
+					closestHit.normal = plane.normal;
+				}
+			}
+		}
 	}
 
 	bool Scene::DoesHit(const Ray& ray) const
