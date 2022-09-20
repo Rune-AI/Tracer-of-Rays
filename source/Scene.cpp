@@ -58,7 +58,7 @@ namespace dae {
 
 			if (t >= ray.min && t <= ray.max)
 			{
-				Vector3 p = ray.origin + (Vector3::Dot(plane.origin - ray.origin, plane.normal)) / Vector3::Dot(ray.direction, plane.normal) * ray.direction;
+				Vector3 p = ray.origin + t * ray.direction;
 
 				if (t < closestHit.t)
 				{
