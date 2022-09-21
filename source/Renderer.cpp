@@ -27,17 +27,17 @@ void Renderer::Render(Scene* pScene) const
 	auto& materials = pScene->GetMaterials();
 	auto& lights = pScene->GetLights();
 
-	float width = m_Width;
-	float height = m_Height;
-	float aspectRatio = width / height;
+	const float width = m_Width;
+	const float height = m_Height;
+	const float aspectRatio = width / height;
 	
 
 	for (int px{}; px < m_Width; ++px)
 	{
+		float cx = ((2 * (px + 0.5f)) / width - 1) * aspectRatio; //This should only be done everytime px changes, so this position is better
 		for (int py{}; py < m_Height; ++py)
 		{	
 			//TODO 3: From Raster to Camera
-			float cx = ((2 * (px + 0.5f)) / width - 1) * aspectRatio; //This should only be done everytime px changes, so this position is suboptimal
 			float cy = 1 - (2 * (py + 0.5f)) / height;
 			
 			Vector3 rayDirection = cx * camera.right + cy * camera.up + camera.forward;
