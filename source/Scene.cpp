@@ -33,28 +33,32 @@ namespace dae {
 		
 		
 		closestHit.t = INFINITY;
-		for (Sphere sphere : GetSphereGeometries())
+		for (const Sphere& sphere : GetSphereGeometries())
 		{
-			Vector3 TC{ sphere.origin - ray.origin };
-			float dp{ TC.Dot(TC, ray.direction) };
-			float od = sqrtf(Square(TC.Magnitude()) - Square(dp));
-			float tca = sqrtf(Square(sphere.radius) - Square(od));
-			float t0 = dp - tca;
+			GeometryUtils::HitTest_Sphere(sphere, ray, closestHit);
 
-			//if hitting sphere and closer than last closestHit
-			if (od <= sphere.radius && t0 < closestHit.t)
-			{
-				closestHit.didHit = true;
-				closestHit.t = t0;
-				closestHit.materialIndex = sphere.materialIndex;
-				closestHit.origin = ray.direction.Normalized() * closestHit.t;
-				closestHit.normal = (closestHit.origin - sphere.origin).Normalized();
-			}
+			//Vector3 TC{ sphere.origin - ray.origin };
+			//float dp{ TC.Dot(TC, ray.direction) };
+			//float od = sqrtf(Square(TC.Magnitude()) - Square(dp));
+			//float tca = sqrtf(Square(sphere.radius) - Square(od));
+			//float t0 = dp - tca;
+
+			////if hitting sphere and closer than last closestHit
+			//if (od <= sphere.radius && t0 < closestHit.t)
+			//{
+			//	closestHit.didHit = true;
+			//	closestHit.t = t0;
+			//	closestHit.materialIndex = sphere.materialIndex;
+			//	closestHit.origin = ray.direction.Normalized() * closestHit.t;
+			//	closestHit.normal = (closestHit.origin - sphere.origin).Normalized();
+			//}
 		}
 
-		for (Plane plane : GetPlaneGeometries())
+		for (const Plane& plane : GetPlaneGeometries())
 		{
-			float t = Vector3::Dot(plane.origin - ray.origin, plane.normal) / Vector3::Dot(ray.direction, plane.normal);
+			GeometryUtils::HitTest_Plane(plane, ray, closestHit);
+
+			/*float t = Vector3::Dot(plane.origin - ray.origin, plane.normal) / Vector3::Dot(ray.direction, plane.normal);
 
 			if (t >= ray.min && t <= ray.max)
 			{
@@ -68,14 +72,31 @@ namespace dae {
 					closestHit.origin = p;
 					closestHit.normal = plane.normal;
 				}
-			}
+			}*/
 		}
 	}
 
 	bool Scene::DoesHit(const Ray& ray) const
 	{
 		//todo W3
-		assert(false && "No Implemented Yet!");
+		/*assert(false && "No Implemented Yet!");
+		return false;*/
+
+		for (const Sphere& sphere : GetSphereGeometries())
+		{
+			if (GeometryUtils::HitTest_Sphere(sphere, ray))
+			{
+				return true;
+			}
+		}
+
+		for (const Plane& plane : GetPlaneGeometries())
+		{
+			if (GeometryUtils::HitTest_Plane(plane, ray))
+			{
+				return true;
+			}
+		}
 		return false;
 	}
 
@@ -165,6 +186,38 @@ namespace dae {
 		AddPlane({ 0.f, -75.f, 0.f }, { 0.f, 1.f,0.f }, matId_Solid_Yellow);
 		AddPlane({ 0.f, 75.f, 0.f }, { 0.f, -1.f,0.f }, matId_Solid_Yellow);
 		AddPlane({ 0.f, 0.f, 125.f }, { 0.f, 0.f,-1.f }, matId_Solid_Magenta);
+	}
+#pragma endregion
+
+#pragma region SCENE W2
+	void Scene_W2::Initialize()
+	{
+		m_Camera.origin = { 0.f, 3.f, -9.0f };
+		m_Camera.fovAngle = 45.f;
+		//default: Material id0 >> SolidColor Material (RED)
+		constexpr unsigned char matId_Solid_Red = 0;
+		const unsigned char matId_Solid_Blue = AddMaterial(new Material_SolidColor{ colors::Blue });
+
+		const unsigned char matId_Solid_Yellow = AddMaterial(new Material_SolidColor{ colors::Yellow });
+		const unsigned char matId_Solid_Green = AddMaterial(new Material_SolidColor{ colors::Green });
+		const unsigned char matId_Solid_Magenta = AddMaterial(new Material_SolidColor{ colors::Magenta });
+
+		//Plane
+		AddPlane({ -5.f,0.f,0.f }, { 1., 0.f, 0.f }, matId_Solid_Green);
+		AddPlane({ 5.f, 0.f,0.f }, { -1., 0, 0 }, matId_Solid_Green);
+		AddPlane({ 0.f, 0.f,0.f }, { 0.f, 1, 0 }, matId_Solid_Yellow);
+		AddPlane({ 0.f, 10.f,0.f }, { 0.f, -1.f,  0.f }, matId_Solid_Yellow);
+		AddPlane({ 0.f, 0.f,10.f }, { 0.f, 0, -1.f }, matId_Solid_Magenta);
+		//Spheres
+		AddSphere({ -1.75f,1.f,0.f }, .75f, matId_Solid_Red);
+		AddSphere({ 0.f,1.f,0.f }, .75f, matId_Solid_Blue);
+		AddSphere({ 1.75f,1.f,0.f }, .75f, matId_Solid_Red);
+		AddSphere({ -1.75f,3.f,0.f }, .75f, matId_Solid_Blue);
+		AddSphere({ 0.f,3.f,0.f }, .75f, matId_Solid_Red);
+		AddSphere({ 1.75f,3.f,0.f }, .75f, matId_Solid_Blue);
+
+		//Light
+		AddPointLight({ 0.f,5.f,-5.f }, 70.f, colors::White);
 	}
 #pragma endregion
 }

@@ -18,19 +18,27 @@ namespace dae
 
 			Vector3 TC{ sphere.origin - ray.origin };
 			float dp{ TC.Dot(TC, ray.direction) };
-			float od = sqrtf(powf(TC.Magnitude(), 2) - powf(dp, 2));
-			float tca = sqrtf(powf(sphere.radius, 2) - powf(od, 2));
+			float od = sqrtf(Square(TC.Magnitude()) - Square(dp));
+			float tca = sqrtf(Square(sphere.radius) - Square(od));
 			float t0 = dp - tca;
 
-			hitRecord.didHit = od <= sphere.radius;
-			if (hitRecord.didHit)
+			//if hit distance is outside of ray scope return false
+			if (t0 > ray.max || t0 < ray.min)
 			{
-				hitRecord.t = dp - tca;
-				hitRecord.materialIndex = sphere.materialIndex;
-				hitRecord.origin = ray.direction.Normalized() * hitRecord.t;
-				hitRecord.normal = (hitRecord.origin - sphere.origin);
+				return false;
 			}
-			return hitRecord.didHit;
+
+			//if hitting sphere and closer than last closestHit
+			if (od <= sphere.radius && t0 < hitRecord.t)
+			{
+				hitRecord.didHit = true;
+				hitRecord.t = t0;
+				hitRecord.materialIndex = sphere.materialIndex;
+				hitRecord.origin = ray.origin + ray.direction.Normalized() * hitRecord.t;
+				hitRecord.normal = (hitRecord.origin - sphere.origin).Normalized();
+				return true;
+			}
+			return false;
 		}
 
 		inline bool HitTest_Sphere(const Sphere& sphere, const Ray& ray)
@@ -44,7 +52,25 @@ namespace dae
 		inline bool HitTest_Plane(const Plane& plane, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
 			//todo W1
-			assert(false && "No Implemented Yet!");
+			/*assert(false && "No Implemented Yet!");
+			return false;*/
+
+			float t = Vector3::Dot(plane.origin - ray.origin, plane.normal) / Vector3::Dot(ray.direction, plane.normal);
+
+			if (t >= ray.min && t <= ray.max)
+			{
+				Vector3 p = ray.origin + t * ray.direction;
+
+				if (t < hitRecord.t)
+				{
+					hitRecord.didHit = true;
+					hitRecord.t = t;
+					hitRecord.materialIndex = plane.materialIndex;
+					hitRecord.origin = p;
+					hitRecord.normal = plane.normal;
+					return true;
+				}
+			}
 			return false;
 		}
 
@@ -91,8 +117,15 @@ namespace dae
 		inline Vector3 GetDirectionToLight(const Light& light, const Vector3 origin)
 		{
 			//todo W3
-			assert(false && "No Implemented Yet!");
-			return {};
+			/*assert(false && "No Implemented Yet!");
+			return {};*/
+
+			if (light.type == dae::LightType::Directional)
+			{
+				return Vector3(FLT_MAX, FLT_MAX, FLT_MAX);
+			}
+
+			return light.origin - origin;
 		}
 
 		inline ColorRGB GetRadiance(const Light& light, const Vector3& target)

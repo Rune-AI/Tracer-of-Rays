@@ -30,48 +30,49 @@ void Renderer::Render(Scene* pScene) const
 	const float width = m_Width;
 	const float height = m_Height;
 	const float aspectRatio = width / height;
-	
+	const float fov = tanf(camera.fovAngle * TO_RADIANS / 2.f);
+	camera.CalculateCameraToWorld();
 
 	for (int px{}; px < m_Width; ++px)
 	{
-		float cx = ((2 * (px + 0.5f)) / width - 1) * aspectRatio; //This should only be done everytime px changes, so this position is better
+		const float cx = ((2 * (px + 0.5f)) / width - 1) * aspectRatio * fov; //This should only be done everytime px changes, so this position is better
 		for (int py{}; py < m_Height; ++py)
 		{	
-			//TODO 3: From Raster to Camera
-			float cy = 1 - (2 * (py + 0.5f)) / height;
-			
-			Vector3 rayDirection = cx * camera.right + cy * camera.up + camera.forward;
-			rayDirection.Normalize();
+			//TODO 1: From Raster to Camera
+			const float cy = (1 - (2 * (py + 0.5f)) / height) * fov;
 
-			Ray hitRay = Ray{ {0,0,0}, rayDirection };
-			ColorRGB finalColor{ rayDirection.x, rayDirection.y, rayDirection.z };
+			//Camera to world
+			const Vector3 rayDirection = camera.cameraToWorld.TransformVector(Vector3(cx, cy, 1.f)).Normalized();
 
-
-			////TODO 4: lets add a circle
-			//HitRecord closestHit{};
-			//
-			//Sphere testSphere{ {0.f, 0.f,100.f}, 50.f, 0 };
-
-			//GeometryUtils::HitTest_Sphere(testSphere, hitRay, closestHit);
-
-			//if (closestHit.didHit)
-			//{
-			//	//finalColor = materials[closestHit.materialIndex]->Shade();
-			//	
-			//	//TODO 5: lets see if I did this right
-			//	const float scaled_t = (closestHit.t - 50.f) / 40.f;
-			//	finalColor = { scaled_t, scaled_t, scaled_t };
-			//}
+			const Ray hitRay = Ray{ camera.origin, rayDirection };
 
 			//TODO 6: rendering the scene
 			HitRecord closestHit{};
 			pScene->GetClosestHit(hitRay, closestHit);
 
+			//ColorRGB finalColor{ rayDirection.x, rayDirection.y, rayDirection.z };
+			ColorRGB finalColor{};
 			if (closestHit.didHit)
 			{
 				finalColor = materials[closestHit.materialIndex]->Shade();
-			}
 
+				for (const Light& light : lights)
+				{
+					Vector3 lightDirection{ dae::LightUtils::GetDirectionToLight(light, closestHit.origin) };
+					const float lightDistance = lightDirection.Normalize();
+
+					const float offset{ 0.0001f };
+					Ray lightRay = Ray{ closestHit.origin + closestHit.normal * offset,
+						lightDirection, 
+						0.0001f, 
+						lightDistance };
+
+					if (pScene->DoesHit(lightRay))
+					{
+						finalColor *= 0.5f;
+					}
+				} 
+			}
 
 			//Update Color in Buffer
 			finalColor.MaxToOne();
