@@ -32,9 +32,16 @@ namespace dae
 
 		Matrix cameraToWorld{};
 
+		bool updateOBN{ true };
+
 
 		Matrix CalculateCameraToWorld()
 		{
+			if (!updateOBN)
+			{
+				return cameraToWorld;
+			}
+
 			//todo: W2
 			/*assert(false && "Not Implemented Yet");
 			return {};*/
@@ -51,14 +58,14 @@ namespace dae
 			Vector3 up = Vector3::Cross(forward, right).Normalized();*/
 
 			//ONB
-			Matrix onbMatrix{
+			cameraToWorld = Matrix(
 				Vector4(right,0),
 				Vector4(up,0),
 				Vector4(forward,0),
 				Vector4(origin, 1)
-			};
+			);
 
-			cameraToWorld = onbMatrix;
+			updateOBN = false;
 			return cameraToWorld;
 		}
 
@@ -129,6 +136,7 @@ namespace dae
 			{
 				if (!(mouseState & SDL_BUTTON_LMASK) != 0)
 				{
+					updateOBN = true;
 					//rotate yaw
 					totalYaw += mouseX;
 					//rotate pitch

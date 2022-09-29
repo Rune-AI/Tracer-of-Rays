@@ -10,7 +10,7 @@ namespace dae
 	{
 #pragma region Sphere HitTest
 		//SPHERE HIT-TESTS
-		inline bool HitTest_Sphere(const Sphere& sphere, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
+		inline bool HitTest_Sphere_slow(const Sphere& sphere, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
 			//todo W1
 			/*assert(false && "No Implemented Yet!");
@@ -18,9 +18,16 @@ namespace dae
 
 			Vector3 TC{ sphere.origin - ray.origin };
 			float dp{ TC.Dot(TC, ray.direction) };
-			float od = sqrtf(Square(TC.Magnitude()) - Square(dp));
+			/*float od = sqrtf(Square(TC.Magnitude()) - Square(dp));
 			float tca = sqrtf(Square(sphere.radius) - Square(od));
-			float t0 = dp - tca;
+			float t0 = dp - tca;*/
+
+			//An *failed* optimization attempt
+			float sphereRadiusSquared = Square(sphere.radius);
+
+			float odSquared = Square(TC.Magnitude()) - Square(dp);
+			float tca = sphereRadiusSquared - odSquared;
+			float t0 = dp - sqrt(tca);
 
 			//if hit distance is outside of ray scope return false
 			if (t0 > ray.max || t0 < ray.min)
@@ -29,7 +36,90 @@ namespace dae
 			}
 
 			//if hitting sphere and closer than last closestHit
-			if (od <= sphere.radius && t0 < hitRecord.t)
+			if (odSquared <= sphereRadiusSquared && t0 < hitRecord.t)
+			{
+				hitRecord.didHit = true;
+				if (ignoreHitRecord)
+				{
+					return true;
+				}
+				hitRecord.t = t0;
+				hitRecord.materialIndex = sphere.materialIndex;
+				hitRecord.origin = ray.origin + ray.direction.Normalized() * hitRecord.t;
+				hitRecord.normal = (hitRecord.origin - sphere.origin).Normalized();
+				return true;
+			}
+			return false;
+		}
+
+		inline bool HitTest_Sphere(const Sphere& sphere, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
+		{
+			Vector3 rayOriginToSphereOrigin{ sphere.origin - ray.origin };
+			float hypothenuseSquared{ rayOriginToSphereOrigin.SqrMagnitude() };
+			float side1{ Vector3::Dot(rayOriginToSphereOrigin, ray.direction) };
+
+			float distanceToRaySquared = hypothenuseSquared - side1 * side1;
+
+			//if the distance to the ray is larger than the radius there will be no results
+			//    also if equal because that is the exact border of the circle
+			if (distanceToRaySquared >= sphere.radius * sphere.radius)
+			{
+				//hitRecord.didHit = false; //TODO: check why this fucks with things
+				return false;
+			}
+
+			float distanceRaypointToIntersect = sqrt(sphere.radius * sphere.radius - distanceToRaySquared);
+			float t = side1 - distanceRaypointToIntersect;
+
+			if (t < ray.min || t > ray.max)
+			{
+				hitRecord.didHit = false;
+				return false;
+			}
+
+			hitRecord.didHit = true;
+			if (ignoreHitRecord)
+			{
+				return true;
+			}
+			hitRecord.materialIndex = sphere.materialIndex;
+			hitRecord.t = t;
+			hitRecord.origin = ray.origin + t * ray.direction;
+			hitRecord.normal = Vector3(sphere.origin, hitRecord.origin).Normalized();
+			return true;
+		}
+
+		inline bool HitTest_Sphere(const Sphere& sphere, const Ray& ray)
+		{
+			HitRecord temp{};
+			return HitTest_Sphere(sphere, ray, temp, true);
+		}
+
+		inline bool HitTest_Sphere_Analytic(const Sphere& sphere, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
+		{
+			//A diffrent way of doing it
+
+			Vector3 TC{ sphere.origin - ray.origin };
+			float dp{ TC.Dot(TC, ray.direction) };
+			/*float od = sqrtf(Square(TC.Magnitude()) - Square(dp));
+			float tca = sqrtf(Square(sphere.radius) - Square(od));
+			float t0 = dp - tca;*/
+
+			//An *failed* optimization attempt
+			float sphereRadiusSquared = Square(sphere.radius);
+
+			float odSquared = Square(TC.Magnitude()) - Square(dp);
+			float tca = sphereRadiusSquared - odSquared;
+			float t0 = dp - sqrtf(tca);
+
+			//if hit distance is outside of ray scope return false
+			if (t0 > ray.max || t0 < ray.min)
+			{
+				return false;
+			}
+
+			//if hitting sphere and closer than last closestHit
+			if (odSquared <= sphereRadiusSquared && t0 < hitRecord.t)
 			{
 				hitRecord.didHit = true;
 				hitRecord.t = t0;
@@ -41,11 +131,6 @@ namespace dae
 			return false;
 		}
 
-		inline bool HitTest_Sphere(const Sphere& sphere, const Ray& ray)
-		{
-			HitRecord temp{};
-			return HitTest_Sphere(sphere, ray, temp, true);
-		}
 #pragma endregion
 #pragma region Plane HitTest
 		//PLANE HIT-TESTS

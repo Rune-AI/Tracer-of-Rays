@@ -36,6 +36,7 @@ void Renderer::Render(Scene* pScene) const
 	for (int px{}; px < m_Width; ++px)
 	{
 		const float cx = ((2 * (px + 0.5f)) / width - 1) * aspectRatio * fov; //This should only be done everytime px changes, so this position is better
+
 		for (int py{}; py < m_Height; ++py)
 		{	
 			//TODO 1: From Raster to Camera
