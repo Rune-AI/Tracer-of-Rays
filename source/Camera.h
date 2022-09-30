@@ -23,7 +23,6 @@ namespace dae
 		float fovAngle{90.f};
 
 		Vector3 forward{Vector3::UnitZ};
-		//Vector3 forward = Vector3(0.266f, -0.453f, 0.860f);
 		Vector3 up{Vector3::UnitY};
 		Vector3 right{Vector3::UnitX};
 
@@ -88,15 +87,15 @@ namespace dae
 			//assert(false && "Not Implemented Yet");
 
 			const float movementSpeed{1.f};
-			if (pKeyboardState[SDL_SCANCODE_LEFT] == true)
+			if (pKeyboardState[SDL_SCANCODE_LEFT])
 			{
-				fovAngle -= movementSpeed * deltaTime;
-				fovAngle = fmax(1.f, fovAngle);
+				fovAngle -= movementSpeed * deltaTime * 50.f;
+				fovAngle = fmax(0.00001f, fovAngle);
 			}
-			if (pKeyboardState[SDL_SCANCODE_RIGHT] == true)
+			if (pKeyboardState[SDL_SCANCODE_RIGHT])
 			{
-				fovAngle += movementSpeed * deltaTime;
-				fovAngle = fmin(179.f, fovAngle);
+				fovAngle += movementSpeed * deltaTime * 50.f;
+				fovAngle = fmin(179.99999f, fovAngle);
 			}
 
 			if (pKeyboardState[SDL_SCANCODE_W])
