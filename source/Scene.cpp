@@ -30,49 +30,23 @@ namespace dae {
 	{
 		//todo W1
 		//assert(false && "No Implemented Yet!");
-		
-		
-		closestHit.t = INFINITY;
+		//HitRecord closestHit = 
+		Ray closestRay{ ray };
+
 		for (const Sphere& sphere : GetSphereGeometries())
 		{
-			GeometryUtils::HitTest_Sphere(sphere, ray, closestHit);
-
-			//Vector3 TC{ sphere.origin - ray.origin };
-			//float dp{ TC.Dot(TC, ray.direction) };
-			//float od = sqrtf(Square(TC.Magnitude()) - Square(dp));
-			//float tca = sqrtf(Square(sphere.radius) - Square(od));
-			//float t0 = dp - tca;
-
-			////if hitting sphere and closer than last closestHit
-			//if (od <= sphere.radius && t0 < closestHit.t)
-			//{
-			//	closestHit.didHit = true;
-			//	closestHit.t = t0;
-			//	closestHit.materialIndex = sphere.materialIndex;
-			//	closestHit.origin = ray.direction.Normalized() * closestHit.t;
-			//	closestHit.normal = (closestHit.origin - sphere.origin).Normalized();
-			//}
+			if (GeometryUtils::HitTest_Sphere(sphere, closestRay, closestHit))
+			{
+				closestRay.max = closestHit.t;
+			}
 		}
 
 		for (const Plane& plane : GetPlaneGeometries())
 		{
-			GeometryUtils::HitTest_Plane(plane, ray, closestHit);
-
-			/*float t = Vector3::Dot(plane.origin - ray.origin, plane.normal) / Vector3::Dot(ray.direction, plane.normal);
-
-			if (t >= ray.min && t <= ray.max)
+			if (GeometryUtils::HitTest_Plane(plane, closestRay, closestHit))
 			{
-				Vector3 p = ray.origin + t * ray.direction;
-
-				if (t < closestHit.t)
-				{
-					closestHit.didHit = true;
-					closestHit.t = t;
-					closestHit.materialIndex = plane.materialIndex;
-					closestHit.origin = p;
-					closestHit.normal = plane.normal;
-				}
-			}*/
+				closestRay.max = closestHit.t;
+			}
 		}
 	}
 
@@ -218,6 +192,96 @@ namespace dae {
 
 		//Light
 		AddPointLight({ 0.f,5.f,-5.f }, 70.f, colors::White);
+	}
+#pragma endregion
+
+#pragma region SCENE W3 TEST
+	void Scene_W3_TestScene::Initialize()
+	{
+		m_Camera.origin = { 0.f, 1.f, -5.0f };
+		m_Camera.fovAngle = 45.f;
+
+		//default: Material id0 >> SolidColor Material (RED)
+		const unsigned char matLambert_Red = AddMaterial(new Material_Lambert{ colors::Red, 1.f });
+		const unsigned char matLambertPhong_Blue = AddMaterial(new Material_LambertPhong{ colors::Blue, 1.f, 1.f, 60.f });
+		const unsigned char matLambert_Yellow = AddMaterial(new Material_Lambert{ colors::Yellow, 1.f });
+
+		//Plane
+		AddPlane({ 0.f,0.f,0.f }, { 0.f, 1.f, 0.f }, matLambert_Yellow);
+		
+		//Spheres
+		AddSphere({ -.75f,1.f,0.f }, 1.f, matLambert_Red);
+		AddSphere({ .75f,1.f,0.f }, 1.f, matLambertPhong_Blue);
+
+		//Light
+		AddPointLight({ 0.f,5.f,5.f }, 25.f, colors::White);
+		AddPointLight({ 0.f,2.5f,-5.f }, 25.f, colors::White);
+	}
+
+	//void Scene_W3_TestScene::Initialize()
+	//{
+	//	m_Camera.origin = { 0.f, 1.f, -5.0f };
+	//	m_Camera.fovAngle = 45.f;
+
+	//	//default: Material id0 >> SolidColor Material (RED)
+	//	const unsigned char matLambert_Red = AddMaterial(new Material_Lambert{ colors::Red, 1 });
+	//	const unsigned char matLambert_Blue = AddMaterial(new Material_Lambert{ colors::Blue, 1 });
+	//	const unsigned char matLambert_Yellow = AddMaterial(new Material_Lambert{ colors::Yellow, 1 });
+
+	//	//Plane
+	//	AddPlane({ 0.f,0.f,0.f }, { 0.f, 1.f, 0.f }, matLambert_Yellow);
+
+	//	//Spheres
+	//	AddSphere({ -.75f,1.f,0.f }, 1.f, matLambert_Red);
+	//	AddSphere({ .75f,1.f,0.f }, 1.f, matLambert_Blue);
+
+	//	//Light
+	//	AddPointLight({ 0.f,5.f,5.f }, 25.f, colors::White);
+	//	AddPointLight({ 0.f,2.5f,-5.f }, 25.f, colors::White);
+	//}
+#pragma endregion
+
+#pragma region SCENE W3
+	void Scene_W3::Initialize()
+	{
+		m_Camera.origin = { 0.f, 3.0f, -9.0f };
+		m_Camera.fovAngle = 45.0f;
+		//default: Materials 
+		const auto matCT_GrayRoughMetal = AddMaterial(new Material_CookTorrence({ 0.972f, 0.960f, 0.915f }, 1.0f, 1.0f));
+		const auto matCT_GrayMediumMetal = AddMaterial(new Material_CookTorrence({ 0.972f, 0.960f, 0.915f }, 1.0f, 0.6f));
+		const auto matCT_GraySmoothMetal = AddMaterial(new Material_CookTorrence({ 0.972f, 0.960f, 0.915f }, 1.0f, 0.1f));
+		const auto matCT_GrayRoughPlastic = AddMaterial(new Material_CookTorrence({ 0.75f, 0.75f, 0.75f }, 0.0f, 1.0f));
+		const auto matCT_GrayMediumPlastic = AddMaterial(new Material_CookTorrence({ 0.75f, 0.75f, 0.75f }, 0.0f, 0.6f));
+		const auto matCT_GraySmoothPlastic = AddMaterial(new Material_CookTorrence({ 0.75f, 0.75f, 0.75f }, 0.0f, 0.1f));
+
+		const auto matLambert_GrayBlue = AddMaterial(new Material_Lambert({ 0.49f, 0.57f, 0.57f }, 1.0f));
+		//Plane
+		AddPlane({ 0.0f,0.0f,10.0f }, { 0.0f, 0.0f, -1.0f }, matLambert_GrayBlue); //BLACK
+		AddPlane({ 0.0f, 0.0f,0.0f }, { 0.0f, 1.0f, 0.0f }, matLambert_GrayBlue); //BOTTOM
+		AddPlane({ 0.0f, 10.0f,0.0f }, { 0.0f, -1.0f, 0.0f }, matLambert_GrayBlue); //TOP
+		AddPlane({ 5.0f, 0.0f,0.0f }, { -1.0f, 0.0f,  0.0f }, matLambert_GrayBlue); //RIGHT
+		AddPlane({ -5.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f }, matLambert_GrayBlue); //LEFT
+
+		//TMP phong test spheres
+		/*const auto matLamertPhong1 = AddMaterial(new Material_LambertPhong(colors::Blue, .5f, .5f, 3.f));
+		const auto matLamertPhong2 = AddMaterial(new Material_LambertPhong(colors::Blue, .5f, .5f, 15.f));
+		const auto matLamertPhong3 = AddMaterial(new Material_LambertPhong(colors::Blue, .5f, .5f, 50.f));
+		AddSphere({ -1.75f,1.0f,0.0f }, .75f, matLamertPhong1);
+		AddSphere({ 0.0f,1.0f,0.0f }, .75f, matLamertPhong2);
+		AddSphere({ 1.75f,1.0f,0.0f }, .75f, matLamertPhong3);*/
+
+
+		//Spheres
+		AddSphere({ -1.75f,1.0f,0.0f }, .75f, matCT_GrayRoughMetal);
+		AddSphere({ 0.0f,1.0f,0.0f }, .75f, matCT_GrayMediumMetal);
+		AddSphere({ 1.75f,1.0f,0.0f }, .75f, matCT_GraySmoothMetal);
+		AddSphere({ -1.75f,3.0f,0.0f }, .75f, matCT_GrayRoughPlastic);
+		AddSphere({ 0.0f,3.0f,0.0f }, .75f, matCT_GrayMediumPlastic);
+		AddSphere({ 1.75f,3.0f,0.0f }, .75f, matCT_GraySmoothPlastic);
+		//Light
+		AddPointLight({ 0.0f,5.0f,5.0f }, 50.0f, ColorRGB{ 1.0f, 0.61f, 0.45f }); //BACKLIGHT
+		AddPointLight({ -2.5f, 5.0f, -5.0f }, 70.0f, ColorRGB{ 1.0f, 0.8f, 0.45f }); //Front Light Left
+		AddPointLight({ 2.5f, 2.5f, -5.0f }, 50.0f, ColorRGB{ 0.34f, 0.47f, 0.68f });
 	}
 #pragma endregion
 }

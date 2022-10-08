@@ -45,7 +45,7 @@ namespace dae
 				}
 				hitRecord.t = t0;
 				hitRecord.materialIndex = sphere.materialIndex;
-				hitRecord.origin = ray.origin + ray.direction.Normalized() * hitRecord.t;
+				hitRecord.origin = ray.origin + ray.direction * hitRecord.t;
 				hitRecord.normal = (hitRecord.origin - sphere.origin).Normalized();
 				return true;
 			}
@@ -54,34 +54,32 @@ namespace dae
 
 		inline bool HitTest_Sphere(const Sphere& sphere, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
-			Vector3 rayOriginToSphereOrigin{ sphere.origin - ray.origin };
-			float hypothenuseSquared{ rayOriginToSphereOrigin.SqrMagnitude() };
-			float side1{ Vector3::Dot(rayOriginToSphereOrigin, ray.direction) };
+			const Vector3 rayOriginToSphereOrigin{ sphere.origin - ray.origin };
+			const float hypothenuseSquared{ rayOriginToSphereOrigin.SqrMagnitude() };
+			const float side1{ Vector3::Dot(rayOriginToSphereOrigin, ray.direction) };
 
-			float distanceToRaySquared = hypothenuseSquared - side1 * side1;
+			const float distanceToRaySquared = hypothenuseSquared - side1 * side1;
 
 			//if the distance to the ray is larger than the radius there will be no results
 			//    also if equal because that is the exact border of the circle
 			if (distanceToRaySquared >= sphere.radius * sphere.radius)
 			{
-				//hitRecord.didHit = false; //TODO: check why this fucks with things
+				//hitRecord.didHit = false;
 				return false;
 			}
 
-			float distanceRaypointToIntersect = sqrt(sphere.radius * sphere.radius - distanceToRaySquared);
-			float t = side1 - distanceRaypointToIntersect;
+			const float distanceRaypointToIntersect = sqrt(sphere.radius * sphere.radius - distanceToRaySquared);
+			const float t = side1 - distanceRaypointToIntersect;
 
 			if (t < ray.min || t > ray.max)
 			{
-				hitRecord.didHit = false;
+				//hitRecord.didHit = false;
 				return false;
 			}
 
+			if (ignoreHitRecord) return true;
+
 			hitRecord.didHit = true;
-			if (ignoreHitRecord)
-			{
-				return true;
-			}
 			hitRecord.materialIndex = sphere.materialIndex;
 			hitRecord.t = t;
 			hitRecord.origin = ray.origin + t * ray.direction;
@@ -216,8 +214,17 @@ namespace dae
 		inline ColorRGB GetRadiance(const Light& light, const Vector3& target)
 		{
 			//todo W3
-			assert(false && "No Implemented Yet!");
-			return {};
+			/*assert(false && "No Implemented Yet!");
+			return {};*/
+
+			if (light.type == LightType::Directional)
+			{
+				return light.color * light.intensity;
+			}
+
+
+			// light color * irradiance
+			return light.color * (light.intensity / (light.origin - target).SqrMagnitude());
 		}
 	}
 

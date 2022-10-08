@@ -14,15 +14,20 @@ namespace dae
 		static ColorRGB Lambert(float kd, const ColorRGB& cd)
 		{
 			//todo: W3
-			assert(false && "Not Implemented Yet");
-			return {};
+			/*assert(false && "Not Implemented Yet");
+			return {};*/
+			ColorRGB perfectDiffuseReflectance{ cd * kd };
+			return perfectDiffuseReflectance / M_PI;
 		}
 
 		static ColorRGB Lambert(const ColorRGB& kd, const ColorRGB& cd)
 		{
 			//todo: W3
-			assert(false && "Not Implemented Yet");
-			return {};
+			/*assert(false && "Not Implemented Yet");
+			return {};*/
+
+			ColorRGB perfectDiffuseReflectance{ cd * kd };
+			return perfectDiffuseReflectance / M_PI;
 		}
 
 		/**
@@ -37,8 +42,15 @@ namespace dae
 		static ColorRGB Phong(float ks, float exp, const Vector3& l, const Vector3& v, const Vector3& n)
 		{
 			//todo: W3
-			assert(false && "Not Implemented Yet");
-			return {};
+			/*assert(false && "Not Implemented Yet");
+			return {};*/
+
+			Vector3 reflectVector{ l - 2 * Vector3::Dot(n, l) * n};
+			float cosAngle{ std::max(Vector3::Dot(reflectVector, v), 0.f) };
+			float PhongSpecularReflection = ks * powf(cosAngle, exp);
+
+			return ColorRGB(PhongSpecularReflection, PhongSpecularReflection, PhongSpecularReflection);
+
 		}
 
 		/**
@@ -51,8 +63,10 @@ namespace dae
 		static ColorRGB FresnelFunction_Schlick(const Vector3& h, const Vector3& v, const ColorRGB& f0)
 		{
 			//todo: W3
-			assert(false && "Not Implemented Yet");
-			return {};
+			/*assert(false && "Not Implemented Yet");
+			return {};*/
+
+			return f0 + (ColorRGB(1,1,1) - f0) * pow(1 - Vector3::Dot(h, v), 5);
 		}
 
 		/**
@@ -65,8 +79,13 @@ namespace dae
 		static float NormalDistribution_GGX(const Vector3& n, const Vector3& h, float roughness)
 		{
 			//todo: W3
-			assert(false && "Not Implemented Yet");
-			return {};
+			/*assert(false && "Not Implemented Yet");
+			return {};*/
+
+			float roughnessSquared{ Square(roughness) }; // unreal engine 4 impelmentation: roughness = roughness^2
+
+			return roughnessSquared
+				/ (M_PI * Square(Square(Vector3::Dot(n, h)) * (roughnessSquared - 1) + 1));
 		}
 
 
@@ -80,8 +99,25 @@ namespace dae
 		static float GeometryFunction_SchlickGGX(const Vector3& n, const Vector3& v, float roughness)
 		{
 			//todo: W3
-			assert(false && "Not Implemented Yet");
-			return {};
+			/*assert(false && "Not Implemented Yet");
+			return {};*/
+
+			//roughness *= roughness;
+
+			bool directLighting{ true };
+			float k{};
+			if (directLighting)
+			{
+				k = Square(roughness + 1) / 8;
+			}
+			else
+			{
+				k = Square(roughness) / 2;
+			}
+
+			float angle = Vector3::Dot(n, v);
+
+			return angle / (angle * (1 - k) + k);
 		}
 
 		/**
@@ -95,8 +131,10 @@ namespace dae
 		static float GeometryFunction_Smith(const Vector3& n, const Vector3& v, const Vector3& l, float roughness)
 		{
 			//todo: W3
-			assert(false && "Not Implemented Yet");
-			return {};
+			/*assert(false && "Not Implemented Yet");
+			return {};*/
+
+			return GeometryFunction_SchlickGGX(n, v, roughness) * GeometryFunction_SchlickGGX(n, l, roughness);
 		}
 
 	}

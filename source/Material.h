@@ -60,8 +60,9 @@ namespace dae
 		ColorRGB Shade(const HitRecord& hitRecord = {}, const Vector3& l = {}, const Vector3& v = {}) override
 		{
 			//todo: W3
-			assert(false && "Not Implemented Yet");
-			return {};
+			/*assert(false && "Not Implemented Yet");
+			return {};*/
+			return BRDF::Lambert(m_DiffuseReflectance, m_DiffuseColor);
 		}
 
 	private:
@@ -85,8 +86,11 @@ namespace dae
 		ColorRGB Shade(const HitRecord& hitRecord = {}, const Vector3& l = {}, const Vector3& v = {}) override
 		{
 			//todo: W3
-			assert(false && "Not Implemented Yet");
-			return {};
+			/*assert(false && "Not Implemented Yet");
+			return {};*/
+			//return BRDF::Phong(m_DiffuseReflectance, m_PhongExponent, l, -v, hitRecord.normal);
+			return BRDF::Lambert(m_DiffuseReflectance, m_DiffuseColor)
+				+ BRDF::Phong(m_DiffuseReflectance, m_PhongExponent, l, -v, hitRecord.normal);
 		}
 
 	private:
@@ -110,8 +114,36 @@ namespace dae
 		ColorRGB Shade(const HitRecord& hitRecord = {}, const Vector3& l = {}, const Vector3& v = {}) override
 		{
 			//todo: W3
-			assert(false && "Not Implemented Yet");
-			return {};
+			/*assert(false && "Not Implemented Yet");
+			return {};*/
+
+			ColorRGB baseSurfaceReflectivity{ m_Albedo };
+			if (m_Metalness == 0)
+			{
+				//Dielectric
+				baseSurfaceReflectivity = ColorRGB(0.04f, 0.04f, 0.04f);
+			}
+
+			Vector3 normalizedHalfVector{ v + l };
+			normalizedHalfVector.Normalize();
+			float squaredRoughness{ Square(m_Roughness) };
+
+			ColorRGB FresnelFunction{ BRDF::FresnelFunction_Schlick(normalizedHalfVector, v, baseSurfaceReflectivity) };
+			float normalDistributionFunction{BRDF::NormalDistribution_GGX(hitRecord.normal, normalizedHalfVector, squaredRoughness)};
+			float GeometryFunction{BRDF::GeometryFunction_Smith(hitRecord.normal, v, l, squaredRoughness)};
+
+			float devision{ 4 * (Vector3::Dot(v, hitRecord.normal) * Vector3::Dot(l, hitRecord.normal)) };
+			ColorRGB specular{ (normalDistributionFunction * FresnelFunction * GeometryFunction) * (1 / devision) };
+
+			ColorRGB kd{};
+			if (m_Metalness == 0)
+			{
+				kd = ColorRGB(1, 1, 1) - FresnelFunction;
+			}
+			
+			ColorRGB diffuse = BRDF::Lambert(kd, baseSurfaceReflectivity);
+
+			return diffuse + specular;
 		}
 
 	private:

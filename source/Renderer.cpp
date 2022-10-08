@@ -45,18 +45,18 @@ void Renderer::Render(Scene* pScene) const
 			//Camera to world
 			const Vector3 rayDirection = camera.cameraToWorld.TransformVector(Vector3(cx, cy, 1.f)).Normalized();
 
-			const Ray hitRay = Ray{ camera.origin, rayDirection };
+			const Ray viewRay = Ray{ camera.origin, rayDirection };
 
 			//TODO 6: rendering the scene
 			HitRecord closestHit{};
-			pScene->GetClosestHit(hitRay, closestHit);
+			pScene->GetClosestHit(viewRay, closestHit);
+
 
 			//ColorRGB finalColor{ rayDirection.x, rayDirection.y, rayDirection.z };
 			ColorRGB finalColor{};
 			if (closestHit.didHit)
 			{
-				finalColor = materials[closestHit.materialIndex]->Shade();
-
+				//finalColor = materials[closestHit.materialIndex]->Shade();
 				for (const Light& light : lights)
 				{
 					Vector3 lightDirection{ dae::LightUtils::GetDirectionToLight(light, closestHit.origin) };
@@ -64,15 +64,40 @@ void Renderer::Render(Scene* pScene) const
 
 					const float offset{ 0.0001f };
 					Ray lightRay = Ray{ closestHit.origin + closestHit.normal * offset,
-						lightDirection, 
-						0.0001f, 
+						lightDirection,
+						0.00001f,
 						lightDistance };
 
-					if (pScene->DoesHit(lightRay))
+					if (m_ShadowsEnabled && pScene->DoesHit(lightRay)) continue;
+
+					float lambertCosineObserverdArea{ Vector3::Dot(closestHit.normal, lightDirection) };
+
+					
+					switch (m_currentLightingMode)
 					{
-						finalColor *= 0.5f;
+					case dae::Renderer::LightingMode::observationArea:
+						if (lambertCosineObserverdArea < 0) continue;
+						finalColor += ColorRGB(lambertCosineObserverdArea, lambertCosineObserverdArea, lambertCosineObserverdArea);
+						break;
+					case dae::Renderer::LightingMode::Radiance:
+						finalColor += LightUtils::GetRadiance(light, closestHit.origin);
+						break;
+					case dae::Renderer::LightingMode::BRDF:
+						if (lambertCosineObserverdArea < 0) continue;
+						finalColor += materials[closestHit.materialIndex]->Shade(closestHit, lightDirection, -rayDirection);
+						break;
+					case dae::Renderer::LightingMode::Combined:
+						if (lambertCosineObserverdArea < 0) continue;
+						finalColor += LightUtils::GetRadiance(light, closestHit.origin)
+							* materials[closestHit.materialIndex]->Shade(closestHit, lightDirection, -rayDirection)
+							* lambertCosineObserverdArea;
+						break;
+					default:
+						//for debugging
+						finalColor += ColorRGB ( rayDirection.x, rayDirection.y, rayDirection.z );
+						break;
 					}
-				} 
+				}
 			}
 
 			//Update Color in Buffer
@@ -93,4 +118,18 @@ void Renderer::Render(Scene* pScene) const
 bool Renderer::SaveBufferToImage() const
 {
 	return SDL_SaveBMP(m_pBuffer, "RayTracing_Buffer.bmp");
+}
+
+void Renderer::KeyboardInputs()
+{
+	//Keyboard Inputs
+	const uint8_t* pKeyboardState = SDL_GetKeyboardState(nullptr);
+	if (pKeyboardState[SDL_SCANCODE_F2])
+	{
+		m_ShadowsEnabled = !m_ShadowsEnabled;
+	}
+	if (pKeyboardState[SDL_SCANCODE_F3])
+	{
+		m_currentLightingMode = static_cast<LightingMode>((int(m_currentLightingMode)+1) % 4);
+	}
 }

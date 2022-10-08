@@ -86,7 +86,13 @@ namespace dae
 			//todo: W2
 			//assert(false && "Not Implemented Yet");
 
-			const float movementSpeed{1.f};
+			float movementSpeed{1.f};
+
+			if (pKeyboardState[SDL_SCANCODE_LSHIFT])
+			{
+				movementSpeed *= 4;
+			}
+
 			if (pKeyboardState[SDL_SCANCODE_LEFT])
 			{
 				fovAngle -= movementSpeed * deltaTime * 50.f;
