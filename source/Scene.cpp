@@ -48,6 +48,22 @@ namespace dae {
 				closestRay.max = closestHit.t;
 			}
 		}
+
+		for (const Triangle& triangle : GetTriangleGeometries())
+		{
+			if (GeometryUtils::HitTest_Triangle(triangle, closestRay, closestHit))
+			{
+				closestRay.max = closestHit.t;
+			}
+		}
+
+		for (const TriangleMesh& triangleMesh : GetTriangleMeshGeometries())
+		{
+			if (GeometryUtils::HitTest_TriangleMesh(triangleMesh, closestRay, closestHit))
+			{
+				closestRay.max = closestHit.t;
+			}
+		}
 	}
 
 	bool Scene::DoesHit(const Ray& ray) const
@@ -71,6 +87,23 @@ namespace dae {
 				return true;
 			}
 		}
+
+		for (const Triangle& triangle : GetTriangleGeometries())
+		{
+			if (GeometryUtils::HitTest_Triangle(triangle, ray))
+			{
+				return true;
+			}
+		}
+
+		for (const TriangleMesh& triangleMesh : GetTriangleMeshGeometries())
+		{
+			if (GeometryUtils::HitTest_TriangleMesh(triangleMesh, ray))
+			{
+				return true;
+			}
+		}
+
 		return false;
 	}
 
@@ -278,6 +311,96 @@ namespace dae {
 		AddSphere({ -1.75f,3.0f,0.0f }, .75f, matCT_GrayRoughPlastic);
 		AddSphere({ 0.0f,3.0f,0.0f }, .75f, matCT_GrayMediumPlastic);
 		AddSphere({ 1.75f,3.0f,0.0f }, .75f, matCT_GraySmoothPlastic);
+		//Light
+		AddPointLight({ 0.0f,5.0f,5.0f }, 50.0f, ColorRGB{ 1.0f, 0.61f, 0.45f }); //BACKLIGHT
+		AddPointLight({ -2.5f, 5.0f, -5.0f }, 70.0f, ColorRGB{ 1.0f, 0.8f, 0.45f }); //Front Light Left
+		AddPointLight({ 2.5f, 2.5f, -5.0f }, 50.0f, ColorRGB{ 0.34f, 0.47f, 0.68f });
+	}
+#pragma endregion
+
+
+#pragma region SCENE W4 TEST
+	void Scene_W4_TestScene::Initialize()
+	{
+		m_Camera.origin = { 0.f, 1.0f, -5.0f };
+		
+		/*m_Camera.origin = { 0.f, 1.0f, 4.0f };
+		m_Camera.totalYaw = { 180.f };*/
+
+		m_Camera.fovAngle = 45.0f;
+		//default: Materials 
+		const auto matLambert_GrayBlue = AddMaterial(new Material_Lambert({ 0.49f, 0.57f, 0.57f }, 1.f));
+		const auto matLambert_White = AddMaterial(new Material_Lambert(colors::White, 1.f));
+
+
+		
+		//Plane
+		AddPlane({ 0.0f,0.0f,10.0f }, { 0.0f, 0.0f, -1.0f }, matLambert_GrayBlue); //BLACK
+		AddPlane({ 0.0f, 0.0f,0.0f }, { 0.0f, 1.0f, 0.0f }, matLambert_GrayBlue); //BOTTOM
+		AddPlane({ 0.0f, 10.0f,0.0f }, { 0.0f, -1.0f, 0.0f }, matLambert_GrayBlue); //TOP
+		AddPlane({ 5.0f, 0.0f,0.0f }, { -1.0f, 0.0f,  0.0f }, matLambert_GrayBlue); //RIGHT
+		AddPlane({ -5.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f }, matLambert_GrayBlue); //LEFT
+
+		//Triangle
+		/*auto triangle = Triangle{ {-.75f, .5f, .0f}, {-.75f, 2.f, .0f}, {.75f, .5f, .0f} };
+		triangle.cullMode = TriangleCullMode::FrontFaceCulling;
+		triangle.materialIndex = matLambert_White;
+		
+		m_Triangles.emplace_back(triangle);*/
+
+		pMesh = AddTriangleMesh(TriangleCullMode::NoCulling, matLambert_White);
+		pMesh->positions = { {-.75f, -1.f, .0f}, {-.75f, 1.f, .0f}, {.75f, 1.f, 1.f}, {.75f, -1.f, 0.f} };
+		pMesh->indices = {
+			0,1,2, //triangle 1
+			0,2,3 //triangle 2
+		};
+
+		pMesh->CalculateNormals();
+
+		pMesh->Translate({ 0.f, 1.5f, 0.f });
+		pMesh->RotateY(45);
+
+		pMesh->UpdateTransforms();
+		
+		//Light
+		AddPointLight({ 0.0f,5.0f,5.0f }, 50.0f, ColorRGB{ 1.0f, 0.61f, 0.45f }); //BACKLIGHT
+		AddPointLight({ -2.5f, 5.0f, -5.0f }, 70.0f, ColorRGB{ 1.0f, 0.8f, 0.45f }); //Front Light Left
+		AddPointLight({ 2.5f, 2.5f, -5.0f }, 50.0f, ColorRGB{ 0.34f, 0.47f, 0.68f });
+	}
+	void Scene_W4_TestScene::Update(Timer* pTimer)
+	{
+		Scene::Update(pTimer);
+
+		pMesh->RotateY(PI_DIV_2 * pTimer->GetTotal());
+		pMesh->UpdateTransforms();
+	}
+#pragma endregion
+
+#pragma region SCENE W4
+	void Scene_W4::Initialize()
+	{
+		m_Camera.origin = { 0.f, 1.0f, -5.0f };
+		m_Camera.fovAngle = 45.0f;
+		//default: Materials 
+		const auto matLambert_GrayBlue = AddMaterial(new Material_Lambert({ 0.49f, 0.57f, 0.57f }, 1.f));
+		const auto matLambert_White = AddMaterial(new Material_Lambert(colors::White, 1.f));
+
+
+
+		//Plane
+		AddPlane({ 0.0f,0.0f,10.0f }, { 0.0f, 0.0f, -1.0f }, matLambert_GrayBlue); //BLACK
+		AddPlane({ 0.0f, 0.0f,0.0f }, { 0.0f, 1.0f, 0.0f }, matLambert_GrayBlue); //BOTTOM
+		AddPlane({ 0.0f, 10.0f,0.0f }, { 0.0f, -1.0f, 0.0f }, matLambert_GrayBlue); //TOP
+		AddPlane({ 5.0f, 0.0f,0.0f }, { -1.0f, 0.0f,  0.0f }, matLambert_GrayBlue); //RIGHT
+		AddPlane({ -5.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f }, matLambert_GrayBlue); //LEFT
+
+		//Triangle
+		auto triangle = Triangle{ {.75f, .5f, .0f}, {-.75f, 2.f, .0f}, {.75f, .5f, .0f} };
+		triangle.cullMode = TriangleCullMode::NoCulling;
+		triangle.materialIndex = matLambert_White;
+
+		m_Triangles.emplace_back(triangle);
+
 		//Light
 		AddPointLight({ 0.0f,5.0f,5.0f }, 50.0f, ColorRGB{ 1.0f, 0.61f, 0.45f }); //BACKLIGHT
 		AddPointLight({ -2.5f, 5.0f, -5.0f }, 70.0f, ColorRGB{ 1.0f, 0.8f, 0.45f }); //Front Light Left

@@ -111,10 +111,7 @@ namespace dae
 			float t0 = dp - sqrtf(tca);
 
 			//if hit distance is outside of ray scope return false
-			if (t0 > ray.max || t0 < ray.min)
-			{
-				return false;
-			}
+			if (t0 > ray.max || t0 < ray.min) return false;
 
 			//if hitting sphere and closer than last closestHit
 			if (odSquared <= sphereRadiusSquared && t0 < hitRecord.t)
@@ -140,7 +137,7 @@ namespace dae
 
 			float t = Vector3::Dot(plane.origin - ray.origin, plane.normal) / Vector3::Dot(ray.direction, plane.normal);
 
-			if (t >= ray.min && t <= ray.max)
+			if (t > ray.min && t < ray.max)
 			{
 				Vector3 p = ray.origin + t * ray.direction;
 
@@ -168,8 +165,70 @@ namespace dae
 		inline bool HitTest_Triangle(const Triangle& triangle, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
 			//todo W5
-			assert(false && "No Implemented Yet!");
-			return false;
+			/*assert(false && "No Implemented Yet!");
+			return false;*/
+			Vector3 normal = triangle.normal;
+			
+			if (Vector3::Dot(normal, ray.direction) == 0 ) return false; // Ray is parallel to the triangle
+
+			switch (triangle.cullMode)
+			{
+			case TriangleCullMode::BackFaceCulling:
+				if (!ignoreHitRecord)
+				{
+					if (Vector3::Dot(normal, ray.direction) > 0) return false;
+				}
+				else
+				{
+					if (Vector3::Dot(normal, ray.direction) < 0) return false;
+				}
+				
+				break;
+			case TriangleCullMode::FrontFaceCulling:
+				if (!ignoreHitRecord)
+				{
+					if (Vector3::Dot(normal, ray.direction) < 0) return false;
+				}
+				else
+				{
+					if (Vector3::Dot(normal, ray.direction) > 0) return false;
+				}
+				break;
+			case TriangleCullMode::NoCulling:
+				break;
+			}
+			
+
+			
+			Vector3 center = (triangle.v0 + triangle.v1 + triangle.v2) / 3;
+			Vector3 L = center - ray.origin;
+			float t = Vector3::Dot(L, normal) / Vector3::Dot(ray.direction, normal);
+			
+			if (t < ray.min || t > ray.max) return false; // Ray is too long/short
+			
+			Vector3 p = ray.origin + t * ray.direction;
+			
+			Vector3 pointToSide = p - triangle.v0;
+			Vector3 a = triangle.v1 - triangle.v0;
+			if (Vector3::Dot(normal, Vector3::Cross(a, pointToSide)) < 0) return false; // Point is not in tiangle
+			pointToSide = p - triangle.v0;
+			Vector3 b = triangle.v2 - triangle.v0;
+			if (Vector3::Dot(normal, Vector3::Cross(b, pointToSide)) > 0) return false; // Point is not in tiangle
+			pointToSide = p - triangle.v1;
+			Vector3 c = triangle.v2 - triangle.v1;
+			if (Vector3::Dot(normal, Vector3::Cross(c, pointToSide)) < 0) return false; // Point is not in tiangle
+
+
+			if (ignoreHitRecord) return true;
+
+			hitRecord.didHit = true;
+			hitRecord.materialIndex = triangle.materialIndex;
+			hitRecord.t = t;
+			hitRecord.origin = p;
+			hitRecord.normal = normal;
+
+			
+			return true;
 		}
 
 		inline bool HitTest_Triangle(const Triangle& triangle, const Ray& ray)
@@ -182,8 +241,33 @@ namespace dae
 		inline bool HitTest_TriangleMesh(const TriangleMesh& mesh, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
 			//todo W5
-			assert(false && "No Implemented Yet!");
-			return false;
+			/*assert(false && "No Implemented Yet!");
+			return false;*/
+
+			Ray newRay = ray;
+			
+			for (size_t i = 0; i < mesh.transformedNormals.size(); i++)
+			{
+				Triangle triangle{};
+				triangle.cullMode = mesh.cullMode;
+				triangle.materialIndex = mesh.materialIndex;
+				triangle.normal = mesh.transformedNormals[i];
+				
+				int startIndex = i * 3;
+				triangle.v0 = mesh.transformedPositions[mesh.indices[startIndex]];
+				triangle.v1 = mesh.transformedPositions[mesh.indices[++startIndex]];
+				triangle.v2 = mesh.transformedPositions[mesh.indices[++startIndex]];
+				
+				if (HitTest_Triangle(triangle, newRay, hitRecord, ignoreHitRecord))
+				{
+					if (ignoreHitRecord) // for shadows that don't care about hitrecord distance
+					{
+						return true;
+					}
+					newRay.max = hitRecord.t;
+				}
+			}
+			return hitRecord.didHit;
 		}
 
 		inline bool HitTest_TriangleMesh(const TriangleMesh& mesh, const Ray& ray)

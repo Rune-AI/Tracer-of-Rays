@@ -66,7 +66,7 @@ namespace dae
 			/*assert(false && "Not Implemented Yet");
 			return {};*/
 
-			return f0 + (ColorRGB(1,1,1) - f0) * pow(1 - Vector3::Dot(h, v), 5);
+			return f0 + (ColorRGB(1,1,1) - f0) * powf(1 - Vector3::Dot(h, v), 5);
 		}
 
 		/**

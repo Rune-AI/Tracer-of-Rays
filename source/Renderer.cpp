@@ -32,7 +32,7 @@ void Renderer::Render(Scene* pScene) const
 	const float aspectRatio = width / height;
 	const float fov = tanf(camera.fovAngle * TO_RADIANS / 2.f);
 	camera.CalculateCameraToWorld();
-
+	
 	for (int px{}; px < m_Width; ++px)
 	{
 		const float cx = ((2 * (px + 0.5f)) / width - 1) * aspectRatio * fov; //This should only be done everytime px changes, so this position is better

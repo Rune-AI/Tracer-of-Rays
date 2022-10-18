@@ -144,6 +144,7 @@ namespace dae
 			ColorRGB diffuse = BRDF::Lambert(kd, baseSurfaceReflectivity);
 
 			return diffuse + specular;
+			//return ColorRGB(1,1,1) * GeometryFunction;
 		}
 
 	private:

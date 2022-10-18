@@ -46,11 +46,11 @@ namespace dae
 			return {};*/
 
 			//No Roll
-			Matrix roatationMatrix = Matrix::CreateRotationX(totalPitch * TO_RADIANS) * Matrix::CreateRotationY(totalYaw * TO_RADIANS);
+			Matrix rotationMatrix = Matrix::CreateRotationX(totalPitch * TO_RADIANS) * Matrix::CreateRotationY(totalYaw * TO_RADIANS);
 
-			forward = roatationMatrix.GetAxisZ();
-			right = roatationMatrix.GetAxisX();
-			up = roatationMatrix.GetAxisY();
+			forward = rotationMatrix.GetAxisZ();
+			right = rotationMatrix.GetAxisX();
+			up = rotationMatrix.GetAxisY();
 
 			// This is for when we have a static forward
 			/*Vector3 right = Vector3::Cross(Vector3::UnitY, forward).Normalized();
