@@ -169,29 +169,30 @@ namespace dae
 			return false;*/
 			Vector3 normal = triangle.normal;
 			
-			if (Vector3::Dot(normal, ray.direction) == 0 ) return false; // Ray is parallel to the triangle
+			float viewAngle = Vector3::Dot(normal, ray.direction);
+			if (viewAngle == 0 ) return false; // Ray is parallel to the triangle
 
 			switch (triangle.cullMode)
 			{
 			case TriangleCullMode::BackFaceCulling:
 				if (!ignoreHitRecord)
 				{
-					if (Vector3::Dot(normal, ray.direction) > 0) return false;
+					if (viewAngle > 0) return false;
 				}
 				else
 				{
-					if (Vector3::Dot(normal, ray.direction) < 0) return false;
+					if (viewAngle < 0) return false;
 				}
 				
 				break;
 			case TriangleCullMode::FrontFaceCulling:
 				if (!ignoreHitRecord)
 				{
-					if (Vector3::Dot(normal, ray.direction) < 0) return false;
+					if (viewAngle < 0) return false;
 				}
 				else
 				{
-					if (Vector3::Dot(normal, ray.direction) > 0) return false;
+					if (viewAngle > 0) return false;
 				}
 				break;
 			case TriangleCullMode::NoCulling:

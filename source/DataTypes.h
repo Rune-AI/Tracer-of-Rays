@@ -144,7 +144,10 @@ namespace dae
 			//const auto finalTransform = ...
 
 			const Matrix finalTransform = scaleTransform * rotationTransform * translationTransform;
+			//const Matrix finalTransform = translationTransform * rotationTransform * scaleTransform;
 
+			transformedPositions.clear();
+			transformedNormals.clear();
 			int index{};
 			while (positions.size() > transformedPositions.size())
 			{
