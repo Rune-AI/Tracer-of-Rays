@@ -65,6 +65,7 @@ int main(int argc, char* args[])
 				isLooping = false;
 				break;
 			case SDL_KEYUP:
+				pRenderer->KeyboardInputs(e);
 				if(e.key.keysym.scancode == SDL_SCANCODE_X)
 					takeScreenshot = true;
 				break;
@@ -73,7 +74,7 @@ int main(int argc, char* args[])
 
 		//--------- Update ---------
 		pScene->Update(pTimer);
-		pRenderer->KeyboardInputs();
+		
 
 		//--------- Render ---------
 		pRenderer->Render(pScene);
