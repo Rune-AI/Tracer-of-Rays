@@ -370,10 +370,11 @@ namespace dae {
 			pMesh->normals, 
 			pMesh->indices);
 		
-		pMesh->Scale({ .7f, .7f, .7f });
-		pMesh->Translate({ .0f, 1.f, 0.f });
+		pMesh->Scale({ 2.f, 2.f, 2.f });
+		//pMesh->Translate({ .0f, 1.f, 0.f });
 
 		//No need to calc normals, they are calculated in ParseOBJ
+		pMesh->UpdateAABB();
 		pMesh->UpdateTransforms();
 		
 		//Light

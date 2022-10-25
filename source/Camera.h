@@ -31,12 +31,12 @@ namespace dae
 
 		Matrix cameraToWorld{};
 
-		bool updateOBN{ true };
+		bool updateONB{ true };
 
 
 		Matrix CalculateCameraToWorld()
 		{
-			if (!updateOBN)
+			if (!updateONB)
 			{
 				return cameraToWorld;
 			}
@@ -64,7 +64,7 @@ namespace dae
 				Vector4(origin, 1)
 			);
 
-			updateOBN = false;
+			updateONB = false;
 			return cameraToWorld;
 		}
 
@@ -141,7 +141,7 @@ namespace dae
 			{
 				if (!(mouseState & SDL_BUTTON_LMASK) != 0)
 				{
-					updateOBN = true;
+					updateONB = true;
 					//rotate yaw
 					totalYaw += mouseX;
 					//rotate pitch
