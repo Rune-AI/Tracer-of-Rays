@@ -121,6 +121,7 @@ namespace dae
 			if (m_Metalness == 0)
 			{
 				//Dielectric
+				//ColorRGB baseSurfaceReflectivity{ m_Albedo };
 				baseSurfaceReflectivity = ColorRGB(0.04f, 0.04f, 0.04f);
 			}
 
@@ -141,7 +142,7 @@ namespace dae
 				kd = ColorRGB(1, 1, 1) - FresnelFunction;
 			}
 			
-			ColorRGB diffuse = BRDF::Lambert(kd, baseSurfaceReflectivity);
+			ColorRGB diffuse = BRDF::Lambert(kd, m_Albedo);
 
 			return diffuse + specular;
 			//return ColorRGB(1,1,1) * GeometryFunction;
