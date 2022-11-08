@@ -191,3 +191,4 @@ void Renderer::KeyboardInputs(const SDL_Event& e)
 		break;
 	}
 }
+
