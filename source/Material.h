@@ -145,7 +145,7 @@ namespace dae
 			ColorRGB diffuse = BRDF::Lambert(kd, m_Albedo);
 
 			return diffuse + specular;
-			//return ColorRGB(1,1,1) * GeometryFunction;
+			//return ColorRGB(1,1,1) * FresnelFunction;
 		}
 
 	private:
