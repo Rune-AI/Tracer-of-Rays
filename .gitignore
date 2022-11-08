@@ -1,3 +1,5 @@
 bin/
 TempFiles/
 .vs/
+source/*.bmp
+source/benchmark.txt
