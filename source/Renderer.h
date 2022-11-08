@@ -8,6 +8,7 @@ struct SDL_Surface;
 
 namespace dae
 {
+	class Timer;
 	class Scene;
 	class Camera;
 	class Light;
@@ -39,7 +40,7 @@ namespace dae
 
 		int m_Width{};
 		int m_Height{};
-
+		
 		enum class LightingMode
 		{
 			observationArea, //Labert cosine law

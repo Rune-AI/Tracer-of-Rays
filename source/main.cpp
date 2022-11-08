@@ -66,15 +66,17 @@ int main(int argc, char* args[])
 				break;
 			case SDL_KEYUP:
 				pRenderer->KeyboardInputs(e);
-				if(e.key.keysym.scancode == SDL_SCANCODE_X)
+				if (e.key.keysym.scancode == SDL_SCANCODE_X)
 					takeScreenshot = true;
+				if (e.key.keysym.scancode == SDL_SCANCODE_F6)
+					// start the benchmark
+					pTimer->StartBenchmark();
 				break;
 			}
 		}
 
 		//--------- Update ---------
 		pScene->Update(pTimer);
-		
 
 		//--------- Render ---------
 		pRenderer->Render(pScene);
