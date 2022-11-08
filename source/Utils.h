@@ -68,7 +68,7 @@ namespace dae
 				hitRecord.t = t0;
 				hitRecord.materialIndex = sphere.materialIndex;
 				hitRecord.origin = ray.origin + ray.direction * hitRecord.t;
-				hitRecord.normal = (hitRecord.origin - sphere.origin).Normalized();
+				hitRecord.normal = (hitRecord.origin - sphere.origin) / sphere.radius;
 				return true;
 			}
 			return false;
