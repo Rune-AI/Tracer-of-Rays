@@ -121,6 +121,20 @@ void Renderer::RenderPixel(Scene* pScene, uint32_t pixelIndex, float fov, float 
 	ColorRGB finalColor{};
 	if (closestHit.didHit)
 	{
+		if (materials[closestHit.materialIndex]->IsReflective())
+		{
+			const float offset{ 0.0001f };
+			const Vector3 reflectDirection{ viewRay.direction - 2.0f * Vector3::Dot(closestHit.normal, viewRay.direction) * closestHit.normal };
+			
+			Ray reflectRay = Ray{ closestHit.origin + reflectDirection * offset,
+				 reflectDirection,
+				0.00001f,
+				100000 };
+			pScene->GetClosestHit(reflectRay, closestHit);
+			if (!closestHit.didHit) return;
+			//return;
+		}
+		
 		//finalColor = materials[closestHit.materialIndex]->Shade();
 		for (const Light& light : lights)
 		{
