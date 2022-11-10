@@ -31,6 +31,10 @@ namespace dae
 
 		Matrix cameraToWorld{};
 
+		const float movementSpeed{ 7.0f };
+		const float rotationSpeed{ 20.0f };
+		const float keyboardRotationSpeed{ 80.0f };
+
 		bool updateONB{ true };
 
 
@@ -70,40 +74,89 @@ namespace dae
 
 		void Update(Timer* pTimer)
 		{
+			InputLogic(pTimer);
+			
+			//const float deltaTime = pTimer->GetElapsed();
+
+			////Keyboard Input
+			//const uint8_t* pKeyboardState = SDL_GetKeyboardState(nullptr);
+
+			////Mouse Input
+			//int mouseX{}, mouseY{};
+			//const uint32_t mouseState = SDL_GetRelativeMouseState(&mouseX, &mouseY);
+
+			//float movementSpeed{1.f};
+
+			//if (pKeyboardState[SDL_SCANCODE_LSHIFT])
+			//{
+			//	movementSpeed *= 4;
+			//}
+
+			//if (pKeyboardState[SDL_SCANCODE_LEFT])
+			//{
+			//	fovAngle -= movementSpeed * deltaTime * 50.f;
+			//	fovAngle = fmax(0.00001f, fovAngle);
+			//}
+			//if (pKeyboardState[SDL_SCANCODE_RIGHT])
+			//{
+			//	fovAngle += movementSpeed * deltaTime * 50.f;
+			//	fovAngle = fmin(179.99999f, fovAngle);
+			//}
+
+			//if (pKeyboardState[SDL_SCANCODE_W])
+			//{
+			//	origin += forward * movementSpeed * deltaTime;
+			//}
+			//if (pKeyboardState[SDL_SCANCODE_S])
+			//{
+			//	origin -= forward * movementSpeed * deltaTime;
+			//}
+			//if (pKeyboardState[SDL_SCANCODE_D])
+			//{
+			//	origin += right * movementSpeed * deltaTime;
+			//}
+			//if (pKeyboardState[SDL_SCANCODE_A])
+			//{
+			//	origin -= right * movementSpeed * deltaTime;
+			//}
+
+
+			//if ((mouseState & SDL_BUTTON_LMASK) != 0)
+			//{
+			//	if ((mouseState & SDL_BUTTON_RMASK) != 0)
+			//	{
+			//		// up and down
+			//		origin.y -= mouseY / 50.f;
+			//		origin.x += mouseX / 50.f;
+			//	}
+			//	else
+			//	{
+			//		//I don't really want naything here for just left clicking tbh
+			//		//But this doesn't run automatically
+			//	}
+			//}
+
+			//if ((mouseState & SDL_BUTTON_RMASK) != 0)
+			//{
+			//	if (!(mouseState & SDL_BUTTON_LMASK) != 0)
+			//	{
+			//		updateONB = true;
+			//		//rotate yaw
+			//		totalYaw += mouseX;
+			//		//rotate pitch
+			//		totalPitch -= mouseY;
+			//	}
+			//}
+		}
+		
+		void InputLogic(Timer* pTimer)
+		{
 			const float deltaTime = pTimer->GetElapsed();
 
 			//Keyboard Input
 			const uint8_t* pKeyboardState = SDL_GetKeyboardState(nullptr);
 
-			
-
-			//Mouse Input
-			int mouseX{}, mouseY{};
-			const uint32_t mouseState = SDL_GetRelativeMouseState(&mouseX, &mouseY);
-
-			
-
-			//todo: W2
-			//assert(false && "Not Implemented Yet");
-
-			float movementSpeed{1.f};
-
-			if (pKeyboardState[SDL_SCANCODE_LSHIFT])
-			{
-				movementSpeed *= 4;
-			}
-
-			if (pKeyboardState[SDL_SCANCODE_LEFT])
-			{
-				fovAngle -= movementSpeed * deltaTime * 50.f;
-				fovAngle = fmax(0.00001f, fovAngle);
-			}
-			if (pKeyboardState[SDL_SCANCODE_RIGHT])
-			{
-				fovAngle += movementSpeed * deltaTime * 50.f;
-				fovAngle = fmin(179.99999f, fovAngle);
-			}
-
+			// Keyboard movement of the camera
 			if (pKeyboardState[SDL_SCANCODE_W])
 			{
 				origin += forward * movementSpeed * deltaTime;
@@ -120,33 +173,65 @@ namespace dae
 			{
 				origin -= right * movementSpeed * deltaTime;
 			}
-
-
-			if ((mouseState & SDL_BUTTON_LMASK) != 0)
+			if (pKeyboardState[SDL_SCANCODE_SPACE])
 			{
-				if ((mouseState & SDL_BUTTON_RMASK) != 0)
-				{
-					// up and down
-					origin.y -= mouseY / 50.f;
-					origin.x += mouseX / 50.f;
-				}
-				else
-				{
-					//I don't really want naything here for just left clicking tbh
-					//But this doesn't run automatically
-				}
+				origin += up * movementSpeed * deltaTime;
 			}
-
-			if ((mouseState & SDL_BUTTON_RMASK) != 0)
+			if (pKeyboardState[SDL_SCANCODE_LSHIFT])
 			{
-				if (!(mouseState & SDL_BUTTON_LMASK) != 0)
-				{
-					updateONB = true;
-					//rotate yaw
-					totalYaw += mouseX;
-					//rotate pitch
-					totalPitch -= mouseY;
-				}
+				origin -= up * movementSpeed * deltaTime;
+			}
+			if (pKeyboardState[SDL_SCANCODE_UP])
+			{
+				totalPitch += keyboardRotationSpeed * deltaTime;
+				updateONB = true;
+			}
+			if (pKeyboardState[SDL_SCANCODE_DOWN])
+			{
+				totalPitch -= keyboardRotationSpeed * deltaTime;
+				updateONB = true;
+			}
+			if (pKeyboardState[SDL_SCANCODE_LEFT])
+			{
+				totalYaw -= keyboardRotationSpeed * deltaTime;
+				updateONB = true;
+			}
+			if (pKeyboardState[SDL_SCANCODE_RIGHT])
+			{
+				totalYaw += keyboardRotationSpeed * deltaTime;
+				updateONB = true;
+			}
+			//Mouse Input
+			int mouseX{}, mouseY{};
+			const uint32_t mouseState = SDL_GetRelativeMouseState(&mouseX, &mouseY);
+
+			// Mouse movements / rotation of the camera
+			if ((mouseState & SDL_BUTTON(SDL_BUTTON_LEFT)) && mouseState & SDL_BUTTON(SDL_BUTTON_RIGHT))
+			{
+				// mouseX yaw left & right, mouse Y moves forwards & backwards
+				const float upwards = -mouseY * movementSpeed * deltaTime;
+				origin += up * upwards;
+				updateONB = true;
+			}
+			else if (mouseState & SDL_BUTTON(SDL_BUTTON_LEFT))
+			{
+				// mouseX yaw left & right, mouse Y moves forwards & backwards
+				const float forwards = -mouseY * deltaTime;
+				const float yaw = mouseX * deltaTime;
+
+				origin += forward * forwards;
+				totalYaw += yaw;
+				updateONB = true;
+			}
+			else if (mouseState & SDL_BUTTON(SDL_BUTTON_RIGHT))
+			{
+				// Look around the current origin
+				const float pitch = -mouseY * rotationSpeed * deltaTime;
+				const float yaw = mouseX * rotationSpeed * deltaTime;
+
+				totalPitch += pitch;
+				totalYaw += yaw;
+				updateONB = true;
 			}
 		}
 	};
