@@ -166,7 +166,7 @@ namespace dae
 				transformedNormals.emplace_back(finalTransform.TransformVector(normals[index++]));
 			}
 
-			for (auto& p : positions)
+			for (Vector3& p : positions)
 			{
 				transformedPositions.emplace_back(finalTransform.TransformPoint(p));
 			}
@@ -181,7 +181,7 @@ namespace dae
 			{
 				minAABB = positions[0];
 				maxAABB = positions[0];
-				for (auto& p : positions)
+				for (Vector3& p : positions)
 				{
 					minAABB = Vector3::Min(p, minAABB);
 					maxAABB = Vector3::Max(p, maxAABB);
