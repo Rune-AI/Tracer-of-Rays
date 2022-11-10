@@ -4,6 +4,8 @@
 #include "Math.h"
 #include "DataTypes.h"
 
+//#define DISABLE_OBJ
+
 namespace dae
 {
 	inline bool SlabTest_TriangleMesh(const TriangleMesh& mesh, const Ray& ray)
@@ -189,9 +191,8 @@ namespace dae
 			//todo W5
 			/*assert(false && "No Implemented Yet!");
 			return false;*/
-			Vector3 normal = triangle.normal;
 			
-			float viewAngle = Vector3::Dot(normal, ray.direction);
+			const float viewAngle{ Vector3::Dot(triangle.normal, ray.direction) };
 			if (viewAngle == 0 ) return false; // Ray is parallel to the triangle
 
 			switch (triangle.cullMode)
@@ -223,23 +224,24 @@ namespace dae
 			
 
 			
-			Vector3 center = (triangle.v0 + triangle.v1 + triangle.v2) / 3;
-			Vector3 L = center - ray.origin;
-			float t = Vector3::Dot(L, normal) / Vector3::Dot(ray.direction, normal);
+			const Vector3 center{ (triangle.v0 + triangle.v1 + triangle.v2) / 3 };
+			const Vector3 L{ center - ray.origin };
+			const float t{ Vector3::Dot(L, triangle.normal) / Vector3::Dot(ray.direction, triangle.normal) };
 			
 			if (t < ray.min || t > ray.max) return false; // Ray is too long/short
 			
-			Vector3 p = ray.origin + t * ray.direction;
+			const Vector3 p{ ray.origin + t * ray.direction };
 			
-			Vector3 pointToSide = p - triangle.v0;
-			Vector3 a = triangle.v1 - triangle.v0;
-			if (Vector3::Dot(normal, Vector3::Cross(a, pointToSide)) < 0) return false; // Point is not in tiangle
-			pointToSide = p - triangle.v0;
-			Vector3 b = triangle.v2 - triangle.v0;
-			if (Vector3::Dot(normal, Vector3::Cross(b, pointToSide)) > 0) return false; // Point is not in tiangle
+			Vector3 pointToSide{ p - triangle.v0 };
+			const Vector3 a = triangle.v1 - triangle.v0;
+			if (Vector3::Dot(triangle.normal, Vector3::Cross(a, pointToSide)) < 0) return false; // Point is not in tiangle
+			
+			const Vector3 b = triangle.v2 - triangle.v0;
+			if (Vector3::Dot(triangle.normal, Vector3::Cross(b, pointToSide)) > 0) return false; // Point is not in tiangle
+			
 			pointToSide = p - triangle.v1;
-			Vector3 c = triangle.v2 - triangle.v1;
-			if (Vector3::Dot(normal, Vector3::Cross(c, pointToSide)) < 0) return false; // Point is not in tiangle
+			const Vector3 c = triangle.v2 - triangle.v1;
+			if (Vector3::Dot(triangle.normal, Vector3::Cross(c, pointToSide)) < 0) return false; // Point is not in tiangle
 
 
 			if (ignoreHitRecord) return true;
@@ -248,9 +250,8 @@ namespace dae
 			hitRecord.materialIndex = triangle.materialIndex;
 			hitRecord.t = t;
 			hitRecord.origin = p;
-			hitRecord.normal = normal;
+			hitRecord.normal = triangle.normal;
 
-			
 			return true;
 		}
 
@@ -268,17 +269,13 @@ namespace dae
 			return false;*/
 
 			// slabtest
-			if (!SlabTest_TriangleMesh(mesh, ray))
-			{
-				return false;
-			}
+			if (!SlabTest_TriangleMesh(mesh, ray)) return false;
 			
-
 			Ray newRay = ray;
 			
+			Triangle triangle;
 			for (size_t i = 0; i < mesh.transformedNormals.size(); i++)
 			{
-				Triangle triangle{};
 				triangle.cullMode = mesh.cullMode;
 				triangle.materialIndex = mesh.materialIndex;
 				triangle.normal = mesh.transformedNormals[i];
@@ -290,10 +287,7 @@ namespace dae
 				
 				if (HitTest_Triangle(triangle, newRay, hitRecord, ignoreHitRecord))
 				{
-					if (ignoreHitRecord) // for shadows that don't care about hitrecord distance
-					{
-						return true;
-					}
+					if (ignoreHitRecord) return true; // for shadows that don't care about hitrecord distance
 					newRay.max = hitRecord.t;
 				}
 			}
@@ -413,6 +407,199 @@ namespace dae
 			}
 
 			return true;
+		}
+#pragma warning(pop)
+
+#pragma warning(push)
+#pragma warning(disable : 4505) //Warning unreferenced local function
+		static bool ParseOBJ_Test(const std::string& filename, std::vector<Vector3>& positions, std::vector<Vector3>& normals, std::vector<int>& indices, bool flipAxisAndWinding = false)
+		{
+#ifdef DISABLE_OBJ
+
+			//TODO: Enable the code below after uncommenting all the vertex attributes of DataTypes::Vertex
+			// >> Comment/Remove '#define DISABLE_OBJ'
+			assert(false && "OBJ PARSER not enabled! Check the comments in Utils::ParseOBJ");
+
+#else
+
+			std::ifstream file(filename);
+			if (!file)
+				return false;
+
+			//std::vector<Vector3> positions{};
+			//std::vector<Vector3> normals{};
+			//std::vector<Vector2> UVs{};
+
+			//vertices.clear();
+			positions.clear();
+			normals.clear();
+			indices.clear();
+
+			std::string sCommand;
+			// start a while iteration ending when the end of file is reached (ios::eof)
+			while (!file.eof())
+			{
+				//read the first word of the string, use the >> operator (istream::operator>>) 
+				file >> sCommand;
+				//use conditional statements to process the different commands	
+				if (sCommand == "#")
+				{
+					// Ignore Comment
+				}
+				else if (sCommand == "v")
+				{
+					//Vertex
+					float x, y, z;
+					file >> x >> y >> z;
+
+					positions.emplace_back(x, y, z);
+				}
+				else if (sCommand == "vt")
+				{
+					// Vertex TexCoord
+					/*float u, v;
+					file >> u >> v;
+					UVs.emplace_back(u, 1 - v);*/
+				}
+				else if (sCommand == "vn")
+				{
+					// Vertex Normal
+					float x, y, z;
+					file >> x >> y >> z;
+
+					//normals.emplace_back(x, y, z);
+				}
+				else if (sCommand == "f")
+				{
+					//if a face is read:
+					//construct the 3 vertices, add them to the vertex array
+					//add three indices to the index array
+					//add the material index as attibute to the attribute array
+					//
+					// Faces or triangles
+					Vector3 position{};
+					Vector3 normal{};
+					size_t iPosition, iTexCoord, iNormal;
+
+					uint32_t tempIndices[3];
+					for (size_t iFace = 0; iFace < 3; iFace++)
+					{
+						// OBJ format uses 1-based arrays
+						file >> iPosition;
+						position = positions[iPosition - 1];
+
+						if ('/' == file.peek())//is next in buffer ==  '/' ?
+						{
+							file.ignore();//read and ignore one element ('/')
+
+							if ('/' != file.peek())
+							{
+								// Optional texture coordinate
+								file >> iTexCoord;
+								//vertex.uv = UVs[iTexCoord - 1];
+							}
+
+							if ('/' == file.peek())
+							{
+								file.ignore();
+
+								// Optional vertex normal
+								file >> iNormal;
+								//normal = normals[iNormal - 1];
+							}
+						}
+
+						//positions.push_back(position); 
+						tempIndices[iFace] = uint32_t(iPosition) - 1;
+						//tempIndices[iFace] = uint32_t(positions.size()) - 1;
+						//tempIndices[iFace] = uint32_t(vertices.size()) - 1;
+						//indices.push_back(uint32_t(vertices.size()) - 1);
+					}
+
+					indices.push_back(tempIndices[0]);
+					if (flipAxisAndWinding)
+					{
+						indices.push_back(tempIndices[2]);
+						indices.push_back(tempIndices[1]);
+					}
+					else
+					{
+						indices.push_back(tempIndices[1]);
+						indices.push_back(tempIndices[2]);
+					}
+				}
+				//read till end of line and ignore all remaining chars
+				file.ignore(1000, '\n');
+			}
+
+			//Cheap Tangent Calculations
+			/*for (uint32_t i = 0; i < indices.size(); i += 3)
+			{
+				uint32_t index0 = indices[i];
+				uint32_t index1 = indices[size_t(i) + 1];
+				uint32_t index2 = indices[size_t(i) + 2];
+
+				const Vector3& p0 = vertices[index0].position;
+				const Vector3& p1 = vertices[index1].position;
+				const Vector3& p2 = vertices[index2].position;
+				const Vector2& uv0 = vertices[index0].uv;
+				const Vector2& uv1 = vertices[index1].uv;
+				const Vector2& uv2 = vertices[index2].uv;
+
+				const Vector3 edge0 = p1 - p0;
+				const Vector3 edge1 = p2 - p0;
+				const Vector2 diffX = Vector2(uv1.x - uv0.x, uv2.x - uv0.x);
+				const Vector2 diffY = Vector2(uv1.y - uv0.y, uv2.y - uv0.y);
+				float r = 1.f / Vector2::Cross(diffX, diffY);
+
+				Vector3 tangent = (edge0 * diffY.y - edge1 * diffY.x) * r;
+				vertices[index0].tangent += tangent;
+				vertices[index1].tangent += tangent;
+				vertices[index2].tangent += tangent;
+			}*/
+
+			//Fix the tangents per vertex now because we accumulated
+			/*for (auto& v : vertices)
+			{
+				v.tangent = Vector3::Reject(v.tangent, v.normal).Normalized();
+
+				if (flipAxisAndWinding)
+				{
+					v.position.z *= -1.f;
+					v.normal.z *= -1.f;
+					v.tangent.z *= -1.f;
+				}*/
+
+			/*}*/
+
+			//Precompute normals
+			for (uint64_t index = 0; index < indices.size(); index += 3)
+			{
+				uint32_t i0 = indices[index];
+				uint32_t i1 = indices[index + 1];
+				uint32_t i2 = indices[index + 2];
+
+				Vector3 edgeV0V1 = positions[i1] - positions[i0];
+				Vector3 edgeV0V2 = positions[i2] - positions[i0];
+				Vector3 normal = Vector3::Cross(edgeV0V1, edgeV0V2);
+
+				if (isnan(normal.x))
+				{
+					int k = 0;
+				}
+
+				normal.Normalize();
+				if (isnan(normal.x))
+				{
+					int k = 0;
+				}
+
+				normals.push_back(normal);
+			}
+
+			return true;
+			
+#endif
 		}
 #pragma warning(pop)
 	}
