@@ -162,4 +162,40 @@ namespace dae
 	private:
 		TriangleMesh* m_Meshes[3]{};
 	};
+
+	class Scene_W4_BunnyScene final : public Scene
+	{
+	public:
+		Scene_W4_BunnyScene() = default;
+		~Scene_W4_BunnyScene() override = default;
+
+		Scene_W4_BunnyScene(const Scene_W4_BunnyScene&) = delete;
+		Scene_W4_BunnyScene(Scene_W4_BunnyScene&&) noexcept = delete;
+		Scene_W4_BunnyScene& operator=(const Scene_W4_BunnyScene&) = delete;
+		Scene_W4_BunnyScene& operator=(Scene_W4_BunnyScene&&) noexcept = delete;
+
+		void Initialize() override;
+		void Update(Timer* pTimer) override;
+
+	private:
+		TriangleMesh* pMesh{ nullptr };
+	};
+
+	class Scene_Extra final : public Scene
+	{
+	public:
+		Scene_Extra() = default;
+		~Scene_Extra() override = default;
+
+		Scene_Extra(const Scene_Extra&) = delete;
+		Scene_Extra(Scene_Extra&&) noexcept = delete;
+		Scene_Extra& operator=(const Scene_Extra&) = delete;
+		Scene_Extra& operator=(Scene_Extra&&) noexcept = delete;
+
+		void Initialize() override;
+		void Update(Timer* pTimer) override;
+
+	private:
+		TriangleMesh* m_Meshes[10]{nullptr};
+	};
 }

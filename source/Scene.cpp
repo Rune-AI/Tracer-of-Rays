@@ -80,13 +80,13 @@ namespace dae {
 			}
 		}
 
-		for (const Plane& plane : GetPlaneGeometries())
+		/*for (const Plane& plane : GetPlaneGeometries())
 		{
 			if (GeometryUtils::HitTest_Plane(plane, ray))
 			{
 				return true;
 			}
-		}
+		}*/
 
 		for (const Triangle& triangle : GetTriangleGeometries())
 		{
@@ -462,6 +462,181 @@ namespace dae {
 			m->RotateY(yawAngle);
 			m->UpdateTransforms();
 		}
+	}
+#pragma endregion
+
+#pragma region SCENE W4 Bunny
+	void Scene_W4_BunnyScene::Initialize()
+	{
+		sceneName = "Bunny Scene";
+		m_Camera.origin = { 0.f, 3.0f, -9.0f };
+		m_Camera.fovAngle = 45.0f;
+
+		//default: Materials 
+		const auto matLambert_GrayBlue = AddMaterial(new Material_Lambert({ 0.49f, 0.57f, 0.57f }, 1.f));
+		const auto matLambert_White = AddMaterial(new Material_Lambert(colors::White, 1.f));
+
+		//Plane
+		AddPlane({ 0.0f,0.0f,10.0f }, { 0.0f, 0.0f, -1.0f }, matLambert_GrayBlue); //BLACK
+		AddPlane({ 0.0f, 0.0f,0.0f }, { 0.0f, 1.0f, 0.0f }, matLambert_GrayBlue); //BOTTOM
+		AddPlane({ 0.0f, 10.0f,0.0f }, { 0.0f, -1.0f, 0.0f }, matLambert_GrayBlue); //TOP
+		AddPlane({ 5.0f, 0.0f,0.0f }, { -1.0f, 0.0f,  0.0f }, matLambert_GrayBlue); //RIGHT
+		AddPlane({ -5.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f }, matLambert_GrayBlue); //LEFT
+
+		pMesh = AddTriangleMesh(TriangleCullMode::BackFaceCulling, matLambert_White);
+		Utils::ParseOBJ("Resources/lowpoly_bunny2.obj",
+			pMesh->positions,
+			pMesh->normals,
+			pMesh->indices);
+
+		pMesh->Scale({ 2.f, 2.f, 2.f });
+
+		//No need to calc normals, they are calculated in ParseOBJ
+		
+		pMesh->UpdateAABB();
+		pMesh->UpdateTransforms();
+
+		//Light
+		AddPointLight({ 0.0f,5.0f,5.0f }, 50.0f, ColorRGB{ 1.0f, 0.61f, 0.45f }); //BACKLIGHT
+		AddPointLight({ -2.5f, 5.0f, -5.0f }, 70.0f, ColorRGB{ 1.0f, 0.8f, 0.45f }); //Front Light Left
+		AddPointLight({ 2.5f, 2.5f, -5.0f }, 50.0f, ColorRGB{ 0.34f, 0.47f, 0.68f });
+	}
+	void Scene_W4_BunnyScene::Update(Timer* pTimer)
+	{
+		Scene::Update(pTimer);
+
+		const auto yawAngle = (cos(pTimer->GetTotal()) + 1.f) / 2.f * PI_2;
+		pMesh->RotateY(yawAngle);
+		pMesh->UpdateTransforms();
+	}
+#pragma endregion
+
+#pragma region SCENE EXTRA
+	void Scene_Extra::Initialize()
+	{
+		sceneName = "Bunny Scene";
+		m_Camera.origin = { 0.f, 2.0f, -8.0f };
+		m_Camera.fovAngle = 45.0f;
+
+		//default: Materials 
+		const auto matLambert_GrayBlue = AddMaterial(new Material_Lambert({ 0.49f, 0.57f, 0.57f }, 1.f));
+		const auto matLambert_White = AddMaterial(new Material_Lambert(colors::White, 1.f));
+
+		const auto matCT_GrayRoughMetal = AddMaterial(new Material_CookTorrence({ .972f, .960f, .915f }, 1.f, 1.f));
+		const auto matCT_GrayMediumMetal = AddMaterial(new Material_CookTorrence({ .972f, .960f, .915f }, 1.f, .6f));
+		const auto matCT_GraySmoothMetal = AddMaterial(new Material_CookTorrence({ .972f, .960f, .915f }, 1.f, .1f));
+		const auto matCT_GrayRoughPlastic = AddMaterial(new Material_CookTorrence({ .75f, .75f, .75f }, .0f, 1.f));
+		const auto matCT_GrayMediumPlastic = AddMaterial(new Material_CookTorrence({ .75f, .75f, .75f }, .0f, 0.6f));
+		const auto matCT_GraySmoothPlastic = AddMaterial(new Material_CookTorrence({ .75f, .75f, .75f }, .0f, .1f));
+
+		const auto matCT_Mirror = AddMaterial(new Material_Mirror({ .75f, .75f, .75f }, .0f, 1.f));
+
+		////Plane
+		//AddPlane({ 0.0f,0.0f,10.0f }, { 0.0f, 0.0f, -1.0f }, matLambert_GrayBlue); //BLACK
+		
+		//AddPlane({ 0.0f, 10.0f,0.0f }, { 0.0f, -1.0f, 0.0f }, matLambert_GrayBlue); //TOP
+		//AddPlane({ 5.0f, 0.0f,0.0f }, { -1.0f, 0.0f,  0.0f }, matLambert_GrayBlue); //RIGHT
+		//AddPlane({ -5.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f }, matLambert_GrayBlue); //LEFT
+
+
+		const auto matCT_BlueRoughPlastic = AddMaterial(new Material_CookTorrence({ 67 / 255.f, 60 / 255.f, 149 / 255.f }, .0f, 1.f));
+		const auto matCT_GroundRoughPlastic = AddMaterial(new Material_CookTorrence({ 165/ 255.f, 183 / 255.f, 215 / 255.f }, .0f, 1.f));
+		const auto matCT_TealRoughPlastic = AddMaterial(new Material_CookTorrence({ 146 / 255.f, 253 / 255.f, 253 / 255.f }, .0f, 1.f));
+		const auto matCT_YellowRoughPlastic = AddMaterial(new Material_CookTorrence({ 255 / 255.f, 255 / 255.f, 27 / 255.f }, .0f, 1.f));
+		
+		AddPlane({ 0.0f, 0.0f,0.0f }, { 0.0f, 1.0f, 0.0f }, matCT_GroundRoughPlastic); //BOTTOM
+		
+		std::string path = "Resources/";
+		
+		std::string files[10]{};
+		files[0] = "lowpoly_cat_body.obj";
+		files[1] = "lowpoly_cat_mustashe1.obj";
+		files[2] = "lowpoly_cat_mustashe2.obj";
+		files[3] = "lowpoly_cat_mustashe3.obj";
+		files[4] = "lowpoly_cat_mustashe4.obj";
+		files[5] = "lowpoly_cat_tail.obj";
+		files[6] = "lowpoly_cat_eyeL.obj";
+		files[7] = "lowpoly_cat_eyeR.obj";
+		files[8] = "lowpoly_fish.obj";
+		files[9] = "lowpoly_background.obj";
+		
+		for (size_t i = 0; i < 9; i++)
+		{
+			m_Meshes[i] = AddTriangleMesh(TriangleCullMode::BackFaceCulling, matCT_GrayRoughPlastic);
+			Utils::ParseOBJ_Test(path + files[i],
+				m_Meshes[i]->positions,
+				m_Meshes[i]->normals,
+				m_Meshes[i]->indices);
+		}
+		/*m_Meshes[6] = AddTriangleMesh(TriangleCullMode::BackFaceCulling, matCT_YellowRoughPlastic);
+		Utils::ParseOBJ_Test(path + files[6],
+			m_Meshes[6]->positions,
+			m_Meshes[6]->normals,
+			m_Meshes[6]->indices);
+
+		m_Meshes[7] = AddTriangleMesh(TriangleCullMode::BackFaceCulling, matCT_YellowRoughPlastic);
+		Utils::ParseOBJ_Test(path + files[6],
+			m_Meshes[7]->positions,
+			m_Meshes[6]->normals,
+			m_Meshes[6]->indices);
+
+		m_Meshes[8] = AddTriangleMesh(TriangleCullMode::BackFaceCulling, matCT_TealRoughPlastic);
+		Utils::ParseOBJ_Test(path + files[8],
+			m_Meshes[8]->positions,
+			m_Meshes[8]->normals,
+			m_Meshes[8]->indices);*/
+		
+		m_Meshes[9] = AddTriangleMesh(TriangleCullMode::NoCulling, matCT_Mirror);
+		Utils::ParseOBJ_Test(path + files[9],
+			m_Meshes[9]->positions,
+			m_Meshes[9]->normals,
+			m_Meshes[9]->indices);
+
+		m_Meshes[9]->Translate({ 0, 0, -1.5f });
+
+		//No need to calc normals, they are calculated in ParseOBJ
+		for (const auto m : m_Meshes)
+		{
+			m->RotateY(M_PI);
+			m->UpdateAABB();
+			m->UpdateTransforms();
+		}
+
+		AddSphere(Vector3{ -3.f, 3.f, -0.5f }, .75f, matCT_Mirror);
+		AddSphere(Vector3{ 3.f, 3.f, -0.5f }, .75f, matCT_Mirror);
+		
+
+		//AddPointLight({ 0.f, 2.f, -3.0f }, 10.0f, ColorRGB{ 1.0f, 1.0f, 1.0f });//Front
+		//AddPointLight({ 0.0f,5.0f,10.0f }, 80.0f, ColorRGB{ 1.0f, 1.0f, 1.0f });//Back
+		
+		AddPointLight({ 0.f, 2.f, -3.0f }, 10.0f, ColorRGB{ 1.0f, 0.61f, 0.45f });//Front
+		AddPointLight({ 0.0f,5.0f,10.0f }, 80.0f, ColorRGB{ 0.34f, 0.47f, 0.68f });//Back
+	}
+	void Scene_Extra::Update(Timer* pTimer)
+	{
+		Scene::Update(pTimer);
+
+		float A = 0.1f;
+		float f = 0.2f;
+		float t = pTimer->GetTotal();
+		float shift = 0;
+		float y = A * sin(2 * PI * f * t + shift);
+		float x = 1 * sin(2 * PI * (f - 0.1f) * t + shift);
+		float z = 0.3 * sin(2 * PI * (f - 0.1f) * t + 3);
+
+		y = y + 1;
+		for (size_t i = 0; i < 8; i++)
+		{
+			m_Meshes[i]->Scale({ y, y, y });
+			m_Meshes[i]->RotateY(z * M_PI/2 + M_PI);
+		}
+		m_Meshes[8]->Translate({ x, 0, 0 });
+		
+		for (const auto m : m_Meshes)
+		{
+			m->UpdateTransforms();
+		}
+		
 	}
 #pragma endregion
 }
